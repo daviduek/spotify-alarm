@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.yourname.spotifyalarm",
+      "bundleIdentifier": "com.daviduek.spotifyalarm",
       "infoPlist": {
         "UIBackgroundModes": ["audio", "fetch"],
         "NSMicrophoneUsageDescription": "Spotify Alarm needs microphone access for audio playback.",
@@ -27,7 +27,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#080c10"
       },
-      "package": "com.yourname.spotifyalarm",
+      "package": "com.daviduek.spotifyalarm",
       "permissions": [
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.VIBRATE",
@@ -60,7 +60,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "your-eas-project-id"
+        "projectId": "706db67f-6b89-452c-b45b-f9c0214ebfca"
       }
     }
   }

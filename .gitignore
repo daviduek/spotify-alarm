@@ -36,6 +36,6 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-# generated native folders
-/ios
+# generated native folders (Expo prebuild)
 /android
+# /ios is the canonical native iOS app; tracked with its own .gitignore

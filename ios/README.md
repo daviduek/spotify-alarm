@@ -97,9 +97,25 @@ ffmpeg -f lavfi -i "anullsrc=channel_layout=mono:sample_rate=44100" \
 # y un tono pleasant para FallbackTone.m4a
 ```
 
-### 5. Generar el proyecto
+### 5. Generar el proyecto (todo en uno)
 
 ```bash
+cd ios
+./Scripts/setup.sh
+open SpotifyAlarm.xcodeproj
+```
+
+El script:
+- Genera `SilentLoop.m4a` y `FallbackTone.m4a` vía `ffmpeg`
+- Detecta si tenés el SDK de Spotify en `Vendor/SpotifyiOS.xcframework` (si
+  no, instruye cómo descargarlo desde https://github.com/spotify/ios-sdk/releases —
+  la app igual compila y funciona con Web API)
+- Corre `xcodegen`
+
+Si querés correrlo manualmente:
+
+```bash
+brew install xcodegen ffmpeg
 cd ios
 xcodegen
 open SpotifyAlarm.xcodeproj

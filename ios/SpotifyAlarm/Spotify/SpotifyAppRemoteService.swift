@@ -1,22 +1,31 @@
 import Foundation
-import SpotifyiOS
 import UIKit
 import os.log
 
+#if canImport(SpotifyiOS)
+import SpotifyiOS
+#endif
+
 /// Wraps the Spotify iOS SDK App Remote, which provides high-fidelity IPC
-/// with the installed Spotify app: play, pause, queue, subscribe to player
-/// state. App Remote does NOT control system volume — for volume ramping we
-/// use the Web API (`/me/player/volume`).
+/// with the installed Spotify app. App Remote does NOT control system volume
+/// — for volume ramping we use the Web API (`/me/player/volume`).
+///
+/// The Spotify iOS SDK ships as a binary `.xcframework` (no SwiftPM); see
+/// `ios/Scripts/install-spotify-sdk.sh`. Without the framework, this service
+/// compiles but the App Remote APIs are no-ops — the AlarmEngine will fall
+/// back to the Web API path.
 @MainActor
 final class SpotifyAppRemoteService: NSObject, ObservableObject {
     enum RemoteError: LocalizedError {
         case spotifyNotInstalled
+        case sdkUnavailable
         case connectionFailed(String)
         case notConnected
 
         var errorDescription: String? {
             switch self {
             case .spotifyNotInstalled: "Instalá la app de Spotify para usar esta función."
+            case .sdkUnavailable: "El SDK de Spotify iOS no está integrado en este build."
             case .connectionFailed(let m): "No pude conectarme con Spotify: \(m)"
             case .notConnected: "Spotify App Remote no está conectado."
             }
@@ -26,19 +35,26 @@ final class SpotifyAppRemoteService: NSObject, ObservableObject {
     @Published private(set) var isConnected: Bool = false
     @Published private(set) var lastError: String?
 
-    let appRemote: SPTAppRemote
     private let auth: SpotifyAuthService
     private let log = AppLog.appRemote
 
+    #if canImport(SpotifyiOS)
+    let appRemote: SPTAppRemote
+    #endif
+
     init(auth: SpotifyAuthService) {
         self.auth = auth
+        #if canImport(SpotifyiOS)
         let config = SPTConfiguration(clientID: SpotifyConfig.clientID, redirectURL: SpotifyConfig.redirectURI)
         config.playURI = ""
         if let swap = SpotifyConfig.tokenSwapURL { config.tokenSwapURL = swap }
         if let refresh = SpotifyConfig.tokenRefreshURL { config.tokenRefreshURL = refresh }
         self.appRemote = SPTAppRemote(configuration: config, logLevel: .info)
+        #endif
         super.init()
+        #if canImport(SpotifyiOS)
         self.appRemote.delegate = self
+        #endif
     }
 
     var isSpotifyInstalled: Bool {
@@ -53,20 +69,29 @@ final class SpotifyAppRemoteService: NSObject, ObservableObject {
             lastError = RemoteError.spotifyNotInstalled.localizedDescription
             return
         }
+        #if canImport(SpotifyiOS)
         appRemote.authorizeAndPlayURI(uri)
+        #else
+        lastError = RemoteError.sdkUnavailable.localizedDescription
+        #endif
     }
 
     func connect(withToken token: String) {
+        #if canImport(SpotifyiOS)
         appRemote.connectionParameters.accessToken = token
         appRemote.connect()
+        #endif
     }
 
     func disconnect() {
+        #if canImport(SpotifyiOS)
         if appRemote.isConnected { appRemote.disconnect() }
+        #endif
         isConnected = false
     }
 
     func handleURLCallback(_ url: URL) -> Bool {
+        #if canImport(SpotifyiOS)
         let parameters = appRemote.authorizationParameters(from: url)
         if let token = parameters?[SPTAppRemoteAccessTokenKey] {
             appRemote.connectionParameters.accessToken = token
@@ -78,12 +103,14 @@ final class SpotifyAppRemoteService: NSObject, ObservableObject {
             log.error("App Remote error: \(error)")
             return true
         }
+        #endif
         return false
     }
 
     // MARK: - Playback
 
     func play(uri: String) async throws {
+        #if canImport(SpotifyiOS)
         guard appRemote.isConnected, let player = appRemote.playerAPI else {
             throw RemoteError.notConnected
         }
@@ -92,9 +119,13 @@ final class SpotifyAppRemoteService: NSObject, ObservableObject {
                 if let error = error { cont.resume(throwing: error) } else { cont.resume() }
             }
         }
+        #else
+        throw RemoteError.sdkUnavailable
+        #endif
     }
 
     func pause() async throws {
+        #if canImport(SpotifyiOS)
         guard appRemote.isConnected, let player = appRemote.playerAPI else {
             throw RemoteError.notConnected
         }
@@ -103,11 +134,13 @@ final class SpotifyAppRemoteService: NSObject, ObservableObject {
                 if let error = error { cont.resume(throwing: error) } else { cont.resume() }
             }
         }
+        #else
+        throw RemoteError.sdkUnavailable
+        #endif
     }
 }
 
-// MARK: - Delegates
-
+#if canImport(SpotifyiOS)
 extension SpotifyAppRemoteService: SPTAppRemoteDelegate {
     nonisolated func appRemoteDidEstablishConnection(_ appRemote: SPTAppRemote) {
         Task { @MainActor in
@@ -133,3 +166,4 @@ extension SpotifyAppRemoteService: SPTAppRemoteDelegate {
         }
     }
 }
+#endif

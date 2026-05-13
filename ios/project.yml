@@ -22,40 +22,19 @@ targets:
         excludes:
           - "Resources/Info.plist"
           - "SpotifyAlarm.entitlements"
+          - "Resources/AUDIO_PLACEHOLDERS.md"
     resources:
       - SpotifyAlarm/Resources/Assets.xcassets
-      - SpotifyAlarm/Resources/SilentLoop.m4a
+      - path: SpotifyAlarm/Resources/SilentLoop.m4a
+        optional: true
+      - path: SpotifyAlarm/Resources/FallbackTone.m4a
+        optional: true
     info:
       path: SpotifyAlarm/Resources/Info.plist
       properties:
         UILaunchStoryboardName: ""
-        UIApplicationSceneManifest:
-          UIApplicationSupportsMultipleScenes: false
-        UIBackgroundModes:
-          - audio
-          - fetch
-          - processing
-        LSApplicationQueriesSchemes:
-          - spotify
-        CFBundleURLTypes:
-          - CFBundleURLSchemes:
-              - spotifyalarm
-            CFBundleURLName: com.daviduek.spotifyalarm.oauth
-        NSAppleMusicUsageDescription: "Spotify Alarm uses audio playback to wake you up with your music."
-        NSUserNotificationsUsageDescription: "Spotify Alarm needs notifications to fire your alarms reliably."
-        BGTaskSchedulerPermittedIdentifiers:
-          - com.daviduek.spotifyalarm.prewarm
-        UIRequiredDeviceCapabilities:
-          - arm64
-        UISupportedInterfaceOrientations:
-          - UIInterfaceOrientationPortrait
-        UIUserInterfaceStyle: Dark
     entitlements:
       path: SpotifyAlarm/SpotifyAlarm.entitlements
-      properties:
-        com.apple.developer.usernotifications.critical-alerts: true
-        keychain-access-groups:
-          - $(AppIdentifierPrefix)com.daviduek.spotifyalarm
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.daviduek.spotifyalarm
@@ -64,11 +43,12 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         ENABLE_BITCODE: NO
         OTHER_LDFLAGS: "-ObjC"
+        FRAMEWORK_SEARCH_PATHS: "$(inherited) $(SRCROOT)/Vendor"
     dependencies:
-      - package: SpotifyiOS
-        product: SpotifyiOS
-
-packages:
-  SpotifyiOS:
-    url: https://github.com/spotify/ios-sdk
-    from: 3.0.0
+      # Spotify iOS SDK ships as a binary .xcframework — not via SwiftPM.
+      # Run `ios/Scripts/install-spotify-sdk.sh` to download it into Vendor/.
+      # The Swift code uses `#if canImport(SpotifyiOS)` so the app builds
+      # without it (App Remote becomes a no-op; Web API path still works).
+      - framework: Vendor/SpotifyiOS.xcframework
+        optional: true
+        embed: true

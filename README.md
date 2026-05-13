@@ -1,5 +1,14 @@
 # Spotify Alarm
 
+> 📱 **Native iOS app (Swift / SwiftUI):** see [`ios/`](./ios) — this is the
+> canonical implementation, with Spotify iOS SDK (App Remote), OAuth PKCE,
+> Critical Alerts, SwiftData, and proper background audio handling for iPhone.
+>
+> 🌐 **Expo / React Native (legacy):** the rest of this README documents an
+> earlier cross-platform prototype. Kept for reference.
+
+---
+
 A smart alarm clock for iOS and Android built with Expo. Wake up to your Spotify playlists with a gradual volume fade — music starts quietly and grows louder over a configurable period.
 
 ---

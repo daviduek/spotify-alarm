@@ -3,7 +3,6 @@ import {
   StyleSheet,
   Text,
   View,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   Alert,
@@ -25,8 +24,14 @@ WebBrowser.maybeCompleteAuthSession();
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const BACKGROUND_TASK = 'SPOTIFY_ALARM_TASK';
+
+// Spotify app Client ID is embedded at build time from
+// EXPO_PUBLIC_SPOTIFY_CLIENT_ID (.env or EAS Secret). Each end-user signs
+// in with their own Spotify account via OAuth — they never type a password
+// or a Client ID in our app.
+const SPOTIFY_CLIENT_ID = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID ?? '';
+
 const STORAGE_KEYS = {
-  CLIENT_ID: 'spotify_client_id',
   ACCESS_TOKEN: 'spotify_access_token',
   REFRESH_TOKEN: 'spotify_refresh_token',
   TOKEN_EXPIRY: 'spotify_token_expiry',
@@ -82,11 +87,10 @@ Notifications.setNotificationHandler({
 
 async function getValidToken(): Promise<string | null> {
   try {
-    const [token, expiryStr, refreshToken, clientId] = await Promise.all([
+    const [token, expiryStr, refreshToken] = await Promise.all([
       AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN),
       AsyncStorage.getItem(STORAGE_KEYS.TOKEN_EXPIRY),
       AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN),
-      AsyncStorage.getItem(STORAGE_KEYS.CLIENT_ID),
     ]);
 
     if (!token) return null;
@@ -95,12 +99,12 @@ async function getValidToken(): Promise<string | null> {
     const isExpired = Date.now() > expiry - 60000;
 
     if (!isExpired) return token;
-    if (!refreshToken || !clientId) return null;
+    if (!refreshToken || !SPOTIFY_CLIENT_ID) return null;
 
     const body = new URLSearchParams({
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
-      client_id: clientId,
+      client_id: SPOTIFY_CLIENT_ID,
     });
 
     const res = await fetch('https://accounts.spotify.com/api/token', {
@@ -199,7 +203,6 @@ export default function App() {
   });
 
   const [screen, setScreen] = useState<Screen>('setup');
-  const [clientId, setClientId] = useState('');
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [playlists, setPlaylists] = useState<SpotifyPlaylist[]>([]);
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
@@ -223,14 +226,11 @@ export default function App() {
 
   useEffect(() => {
     (async () => {
-      const [savedClientId, savedToken, savedExpiry, savedConfig] = await Promise.all([
-        AsyncStorage.getItem(STORAGE_KEYS.CLIENT_ID),
+      const [savedToken, savedExpiry, savedConfig] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN),
         AsyncStorage.getItem(STORAGE_KEYS.TOKEN_EXPIRY),
         AsyncStorage.getItem(STORAGE_KEYS.ALARM_CONFIG),
       ]);
-
-      if (savedClientId) setClientId(savedClientId);
 
       if (savedToken && savedExpiry && Date.now() < parseInt(savedExpiry, 10)) {
         setAccessToken(savedToken);
@@ -275,7 +275,7 @@ export default function App() {
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
-      clientId: clientId || 'placeholder',
+      clientId: SPOTIFY_CLIENT_ID || 'placeholder',
       scopes: SPOTIFY_SCOPES,
       redirectUri: REDIRECT_URI,
       usePKCE: true,
@@ -301,7 +301,7 @@ export default function App() {
         grant_type: 'authorization_code',
         code,
         redirect_uri: REDIRECT_URI,
-        client_id: clientId,
+        client_id: SPOTIFY_CLIENT_ID,
         code_verifier: codeVerifier,
       });
 
@@ -324,7 +324,6 @@ export default function App() {
         AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, data.access_token),
         AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, data.refresh_token ?? ''),
         AsyncStorage.setItem(STORAGE_KEYS.TOKEN_EXPIRY, String(expiry)),
-        AsyncStorage.setItem(STORAGE_KEYS.CLIENT_ID, clientId),
       ]);
 
       setAccessToken(data.access_token);
@@ -337,11 +336,14 @@ export default function App() {
   }
 
   async function handleConnect() {
-    if (!clientId.trim()) {
-      Alert.alert('Missing Client ID', 'Please enter your Spotify Client ID.');
+    if (!SPOTIFY_CLIENT_ID) {
+      Alert.alert(
+        'Build sin Client ID',
+        'Esta versión de la app no tiene el Spotify Client ID embebido. ' +
+          'Configurá EXPO_PUBLIC_SPOTIFY_CLIENT_ID y reconstruí.'
+      );
       return;
     }
-    await AsyncStorage.setItem(STORAGE_KEYS.CLIENT_ID, clientId.trim());
     setAuthLoading(true);
     await promptAsync();
   }
@@ -634,43 +636,20 @@ export default function App() {
     return (
       <ScrollView
         style={styles.container}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { justifyContent: 'center', flexGrow: 1 }]}
         keyboardShouldPersistTaps="handled"
       >
         <StatusBar barStyle="light-content" backgroundColor="#080c10" />
 
-        <Text style={styles.clock}>{clockStr}</Text>
-        <Text style={styles.title}>Spotify Alarm</Text>
-        <Text style={styles.subtitle}>Smart Wake-Up with Gradual Volume Fade</Text>
-
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Spotify Setup</Text>
-
-          <Text style={styles.instructionText}>
-            1. Go to{' '}
-            <Text style={styles.link}>developer.spotify.com/dashboard</Text>
+        <View style={{ alignItems: 'center', marginBottom: 48 }}>
+          <Text style={{ fontSize: 72, marginBottom: 16 }}>⏰</Text>
+          <Text style={styles.title}>Spotify Alarm</Text>
+          <Text style={styles.subtitle}>
+            Despertate con tu música.{'\n'}Volumen progresivo. Hora exacta.
           </Text>
-          <Text style={styles.instructionText}>
-            2. Create an app (or open an existing one)
-          </Text>
-          <Text style={styles.instructionText}>
-            3. In "Edit Settings" → Redirect URIs, add exactly:
-          </Text>
-          <View style={styles.codeBlock}>
-            <Text style={styles.codeText}>spotifyalarm://callback</Text>
-          </View>
-          <Text style={styles.instructionText}>4. Copy your Client ID and paste it below:</Text>
+        </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Paste Spotify Client ID here"
-            placeholderTextColor="#444"
-            value={clientId}
-            onChangeText={setClientId}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-
+        <View style={{ paddingHorizontal: 24 }}>
           <TouchableOpacity
             style={[styles.primaryBtn, authLoading && styles.btnDisabled]}
             onPress={handleConnect}
@@ -679,16 +658,30 @@ export default function App() {
             {authLoading ? (
               <ActivityIndicator color="#000" />
             ) : (
-              <Text style={styles.primaryBtnText}>Connect Spotify</Text>
+              <Text style={styles.primaryBtnText}>Conectar con Spotify</Text>
             )}
           </TouchableOpacity>
-        </View>
 
-        <View style={styles.premiumWarning}>
-          <Text style={styles.premiumText}>
-            ⚠️  Spotify Premium is required for API playback control. Free accounts cannot start
-            or control playback remotely.
+          <Text style={[styles.instructionText, { textAlign: 'center', marginTop: 16, opacity: 0.6 }]}>
+            Iniciá sesión con tu propia cuenta de Spotify.{'\n'}
+            Nunca vas a escribir tu contraseña en esta app — usamos OAuth oficial.
           </Text>
+
+          {!SPOTIFY_CLIENT_ID && (
+            <View style={[styles.premiumWarning, { marginTop: 24 }]}>
+              <Text style={styles.premiumText}>
+                ⚠ Build de desarrollo sin Client ID configurado.{'\n'}
+                Definí EXPO_PUBLIC_SPOTIFY_CLIENT_ID en .env y reconstruí.
+              </Text>
+            </View>
+          )}
+
+          <View style={[styles.premiumWarning, { marginTop: 16 }]}>
+            <Text style={styles.premiumText}>
+              ⓘ Necesitás cuenta de Spotify Premium para control remoto de
+              reproducción (limitación de la API de Spotify, no de la app).
+            </Text>
+          </View>
         </View>
       </ScrollView>
     );

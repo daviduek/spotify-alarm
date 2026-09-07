@@ -40,3 +40,8 @@ yarn-error.*
 
 # test output
 coverage/
+
+# Supabase local
+supabase/.branches
+supabase/.temp
+.env.local

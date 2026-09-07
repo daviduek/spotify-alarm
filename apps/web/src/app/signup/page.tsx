@@ -1,0 +1,16 @@
+import type { Metadata } from 'next';
+import { Suspense } from 'react';
+
+import { AuthForm } from '../../components/AuthForm';
+
+export const metadata: Metadata = { title: 'Wake — Create account' };
+
+export default function SignupPage() {
+  return (
+    <main className="auth-main">
+      <Suspense>
+        <AuthForm mode="signup" />
+      </Suspense>
+    </main>
+  );
+}

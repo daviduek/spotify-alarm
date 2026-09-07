@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main, 'claude/**']
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Typecheck · tests · web build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck (domain, mobile, web)
+        run: npm run typecheck
+
+      - name: Unit tests (domain)
+        run: npm test
+
+      - name: Web build
+        run: npm run web:build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+
+      - name: Expo config sanity
+        working-directory: apps/mobile
+        run: npx expo config --type public > /dev/null

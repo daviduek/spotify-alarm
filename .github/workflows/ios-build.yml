@@ -4,11 +4,11 @@ on:
   push:
     branches: [master, main]
     paths:
-      - "ios/**"
+      - "legacy/ios-native/**"
       - ".github/workflows/ios-build.yml"
   pull_request:
     paths:
-      - "ios/**"
+      - "legacy/ios-native/**"
       - ".github/workflows/ios-build.yml"
   workflow_dispatch:
 
@@ -28,11 +28,11 @@ jobs:
         run: brew install xcodegen ffmpeg
 
       - name: Run setup script
-        working-directory: ios
+        working-directory: legacy/ios-native
         run: ./Scripts/setup.sh
 
       - name: Build for iOS Simulator
-        working-directory: ios
+        working-directory: legacy/ios-native
         run: |
           set -o pipefail
           xcodebuild \
@@ -50,4 +50,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: xcodebuild-log
-          path: ios/xcodebuild.log
+          path: legacy/ios-native/xcodebuild.log

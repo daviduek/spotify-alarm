@@ -1,3 +1,5 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
 # dependencies
 node_modules/
 
@@ -6,14 +8,8 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
-.metro-health-check*
 
-# Next.js
-.next/
-out/
-.vercel
-
-# Native build artifacts / secrets
+# Native
 .kotlin/
 *.orig.*
 *.jks
@@ -21,22 +17,25 @@ out/
 *.p12
 *.key
 *.mobileprovision
-*.pem
+
+# Metro
+.metro-health-check*
 
 # debug
 npm-debug.*
 yarn-debug.*
 yarn-error.*
 
-# OS
+# macOS
 .DS_Store
+*.pem
 
 # local env files
-.env
 .env*.local
 
 # typescript
 *.tsbuildinfo
 
-# test output
-coverage/
+# generated native folders
+/ios
+/android

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { WAKE_SOUNDS, type AudioSource, type MusicItem } from '@wake/domain';
 
-import { fetchRecordings, signedUrl, type Recording } from '../lib/data/recordings';
+import { fetchRecordings, type Recording } from '../lib/data/recordings';
 import { myPlaylists, searchSpotify } from '../lib/spotify/browseApi';
 import { getSupabaseBrowserClient } from '../lib/supabase/client';
 
@@ -77,7 +77,7 @@ export function SourcePicker({
             <div className="list-row"><span className="value">No recordings yet.</span><Link href="/app/sounds" className="btn btn-ghost">Record one</Link></div>
           ) : (
             recordings.map((r) => (
-              <button key={r.id} className="list-row" style={{ width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }} onClick={async () => onPick({ type: 'recording', recordingId: r.id, fileUri: (await signedUrl(supabase, r.storagePath)) ?? undefined, title: r.name })}>
+              <button key={r.id} className="list-row" style={{ width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }} onClick={() => onPick({ type: 'recording', recordingId: r.id, title: r.name })}>
                 <span className="label">▶ {r.name}</span>
               </button>
             ))

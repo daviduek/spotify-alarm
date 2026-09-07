@@ -12,6 +12,7 @@ import {
   describeFade,
   describeSource,
   fadeConfigFromPreset,
+  fadePresetFor,
   primarySource,
   wakeSoundName,
   type Alarm,
@@ -39,7 +40,7 @@ export function AlarmEditor({ userId, existing, spotifyConnected }: { userId: st
   const [weekdays, setWeekdays] = useState<Weekday[]>(base.recurrence.type === 'weekly' ? base.recurrence.weekdays : []);
   const [source, setSource] = useState<AudioSource>(primarySource(base.audioPlan) ?? { type: 'local', soundId: base.fallbackSoundId });
   const [fallbackSoundId, setFallbackSoundId] = useState(base.fallbackSoundId);
-  const [fadePreset, setFadePreset] = useState<FadePresetId | 'off'>(base.fadeIn.enabled ? 'normal' : 'off');
+  const [fadePreset, setFadePreset] = useState<FadePresetId | 'off'>(() => { const p = fadePresetFor(base.fadeIn); return p === 'custom' ? 'normal' : p; });
   const [snoozeMinutes, setSnoozeMinutes] = useState(base.snooze.enabled ? base.snooze.durationMinutes : 0);
   const [vibration, setVibration] = useState(base.vibration.enabled);
   const [pickerOpen, setPickerOpen] = useState(false);

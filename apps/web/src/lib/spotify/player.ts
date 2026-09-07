@@ -62,6 +62,7 @@ export class SpotifyBrowserPlayer {
   private player: SpotifyPlayer | null = null;
   private deviceId: string | null = null;
   private ready = false;
+  private lastState: { paused: boolean; position: number; at: number } | null = null;
 
   /** Idempotent: loads the SDK, connects, and remembers this tab's device id. */
   async init(): Promise<boolean> {
@@ -77,6 +78,10 @@ export class SpotifyBrowserPlayer {
         volume: 0.5,
       });
       this.player = player;
+      player.addListener('player_state_changed', (payload) => {
+        const st = payload as { paused?: boolean; position?: number } | null;
+        if (st) this.lastState = { paused: Boolean(st.paused), position: st.position ?? 0, at: Date.now() };
+      });
       await new Promise<void>((resolve, reject) => {
         player.addListener('ready', (payload) => {
           this.deviceId = (payload as { device_id: string }).device_id;
@@ -115,6 +120,41 @@ export class SpotifyBrowserPlayer {
     } catch (error) {
       return { success: false, reason: error instanceof Error ? error.message : 'unknown' };
     }
+  }
+
+  /**
+   * After a 2xx from /me/player/play, confirm audio is really flowing before silencing the fallback:
+   * SDK device → wait for a non-paused state whose position advances; Web API device → poll /me/player.
+   */
+  async confirmPlaying(timeoutMs = 6000): Promise<boolean> {
+    const deadline = Date.now() + timeoutMs;
+    const usingSdk = this.ready && this.player !== null;
+    let firstPos: number | null = null;
+    while (Date.now() < deadline) {
+      if (usingSdk) {
+        const st = this.lastState;
+        if (st && !st.paused) {
+          if (firstPos === null) firstPos = st.position;
+          else if (st.position > firstPos) return true;
+        }
+      } else {
+        try {
+          const token = await fetchToken();
+          const res = await fetch(`${API}/me/player`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+          if (res.status === 200) {
+            const j = (await res.json()) as { is_playing?: boolean; progress_ms?: number };
+            if (j.is_playing) {
+              if (firstPos === null) firstPos = j.progress_ms ?? 0;
+              else if ((j.progress_ms ?? 0) > firstPos) return true;
+            }
+          }
+        } catch {
+          /* keep polling until the deadline */
+        }
+      }
+      await new Promise((r) => setTimeout(r, usingSdk ? 400 : 1200));
+    }
+    return false;
   }
 
   private startPlayback(token: string, uri: string, deviceId?: string): Promise<Response> {

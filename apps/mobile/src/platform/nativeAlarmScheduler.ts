@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { PermissionsAndroid, Platform } from 'react-native';
 import {
   planIncludesProvider,
   planIncludesRecording,
@@ -62,6 +62,16 @@ function toPermissionState(status: NativeAuthorizationStatus): PermissionState {
  */
 export class NativeAlarmScheduler implements AlarmScheduler {
   async requestPermission(): Promise<PermissionState> {
+    if (Platform.OS === 'android' && Number(Platform.Version) >= 33) {
+      // Android 13+: without POST_NOTIFICATIONS the foreground-service notification (and therefore the
+      // full-screen alarm activity) is suppressed. Ask explicitly; the result is read back via diagnostics.
+      try {
+        const r = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+        logger.info('notification_permission_requested', { result: r });
+      } catch (error) {
+        logger.warn('notification_permission_request_failed', { error: String(error) });
+      }
+    }
     const status = await WakeAlarm.requestAuthorization();
     logger.info('alarm_permission_requested', { status });
     return toPermissionState(status);

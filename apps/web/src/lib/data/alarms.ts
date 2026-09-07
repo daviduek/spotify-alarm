@@ -34,6 +34,7 @@ export function rowToAlarm(row: AlarmRow): Alarm | null {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   });
+  if (!parsed.success) console.warn('alarm row failed validation', row.id, parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; '));
   return parsed.success ? parsed.data : null;
 }
 

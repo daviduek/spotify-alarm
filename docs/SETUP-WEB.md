@@ -24,7 +24,7 @@ Después, en el dashboard de Supabase → Authentication:
 3. Environment Variables (de `apps/web/.env.example`):
    - `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` → Supabase → Settings → API.
    - `NEXT_PUBLIC_APP_URL` → la URL que te da Vercel (ej. `https://wake-xxx.vercel.app`).
-   - `SPOTIFY_CLIENT_ID` → paso 3 (opcional; sin esto todo funciona menos Spotify).
+   - `SPOTIFY_CLIENT_ID` + `SUPABASE_SERVICE_ROLE_KEY` → paso 3 (opcional; sin esto todo funciona menos Spotify).
 4. **Deploy**. Listo: te registrás en `/signup`, entrás en `/app`.
 
 > Cada push a la rama `claude/wake-alarm-setup-acb0nb` genera un preview; `master` es producción.
@@ -70,10 +70,12 @@ por diseño (va al bundle del browser), no es un secreto:
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://ojuhtqqymfczzlsakdyu.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_Sz3-XXTkMf3HNAe55GZHWQ_Ua4JSY_3
-NEXT_PUBLIC_APP_URL=https://TU-URL-DE-VERCEL
+NEXT_PUBLIC_APP_URL=https://wakealarm.vercel.app
 ```
 
-Agregá `SPOTIFY_CLIENT_ID` cuando hagas el paso 3 (opcional).
+> Ya cargadas en el proyecto Vercel `wake` (production + preview). Deploy: <https://wakealarm.vercel.app>.
+
+Para Spotify (paso 3) hacen falta además `SPOTIFY_CLIENT_ID` y `SUPABASE_SERVICE_ROLE_KEY` (server-only; Supabase → Project Settings → API keys). Los tokens de Spotify se leen/escriben solo con esa key: aplicar antes `supabase/migrations/0002_hardening.sql`.
 
 ### Después del primer deploy — configurar Auth URLs en Supabase
 

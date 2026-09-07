@@ -46,18 +46,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: '#000000',
     },
     predictiveBackGestureEnabled: false,
-    // Everything alarm-related is also declared in modules/wake-alarm/android/src/main/AndroidManifest.xml
-    // (manifest merger). Listed here too so `expo prebuild` output is explicit.
+    // Alarm permissions live ONLY in modules/wake-alarm/android/src/main/AndroidManifest.xml (manifest
+    // merger). Declaring SCHEDULE_EXACT_ALARM here too (without maxSdkVersion) makes the merger fail.
     permissions: [
-      'android.permission.USE_EXACT_ALARM',
-      'android.permission.SCHEDULE_EXACT_ALARM',
-      'android.permission.RECEIVE_BOOT_COMPLETED',
-      'android.permission.WAKE_LOCK',
-      'android.permission.VIBRATE',
-      'android.permission.FOREGROUND_SERVICE',
-      'android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK',
-      'android.permission.POST_NOTIFICATIONS',
-      'android.permission.USE_FULL_SCREEN_INTENT',
       'android.permission.RECORD_AUDIO',
       'android.permission.INTERNET',
     ],
@@ -90,7 +81,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         ios: {
           // AlarmKit lives in the iOS 26 SDK — EAS must build with Xcode 26+ (see eas.json image).
-          deploymentTarget: '16.4',
+          deploymentTarget: '26.0',
         },
         android: {
           // Android 14 (34)+ APIs are used (FOREGROUND_SERVICE_MEDIA_PLAYBACK, canUseFullScreenIntent).

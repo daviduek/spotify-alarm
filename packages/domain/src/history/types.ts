@@ -10,7 +10,7 @@ export type AlarmEvent = {
   providerAttempted?: boolean;
   providerSucceeded?: boolean;
   providerFailureReason?: string;
-  platform: 'ios' | 'android';
+  platform: 'ios' | 'android' | 'web';
   appVersion?: string;
 };
 

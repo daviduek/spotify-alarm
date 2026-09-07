@@ -353,3 +353,55 @@ th {
 
 .hero .cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
 :root { --surface2: #1a1a1d; --danger: #ff453a; }
+
+/* ---------------------------------------------------------------------------
+   Landing (2026-09 redesign)
+   --------------------------------------------------------------------------- */
+.container { max-width: 760px; }
+header.site .brand { display: inline-flex; align-items: center; gap: 8px; }
+header.site .brand-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 18px var(--accent); }
+header.site nav { display: flex; gap: 4px 20px; flex-wrap: wrap; justify-content: flex-end; }
+header.site nav a { margin-left: 0; }
+header.site nav .nav-cta { color: var(--text); font-weight: 600; }
+
+.landing .hero { padding-top: 24px; }
+.landing .hero h1 { font-size: clamp(44px, 9.5vw, 84px); letter-spacing: -2.5px; margin: 20px 0 16px; }
+.landing .hero h1 em { font-style: normal; color: var(--accent); }
+.landing .hero .lead { font-size: 19px; max-width: 600px; line-height: 1.5; }
+.cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.btn-lg { min-height: 52px; padding: 0 22px; font-size: 16px; }
+
+.hero-clock { margin: 44px 0 8px; }
+.hero-clock-time { font-size: clamp(96px, 24vw, 176px); font-weight: 200; letter-spacing: -8px; line-height: 1; }
+.hero-clock-sub { color: var(--dim); font-size: 16px; margin-top: 8px; }
+
+.promise .big-quote { font-size: clamp(24px, 4.5vw, 34px); font-weight: 700; letter-spacing: -0.8px; color: var(--text); margin: 4px 0 12px; line-height: 1.15; }
+
+.steps { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 18px; }
+.step { display: flex; gap: 16px; align-items: flex-start; }
+.step-n { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border); display: grid; place-items: center; font-weight: 700; color: var(--accent); background: var(--surface); }
+.step h3 { margin: 4px 0 4px; font-size: 17px; }
+.step p { margin: 0; }
+
+.grid.two { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.card-tag { display: inline-block; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+
+.feature-list { display: grid; gap: 14px; color: var(--dim); }
+.feature-list strong { color: var(--text); }
+
+.faq { display: grid; gap: 8px; }
+.faq details { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); padding: 0 18px; }
+.faq summary { cursor: pointer; padding: 16px 0; font-weight: 600; color: var(--text); list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: '+'; color: var(--dim); font-weight: 400; }
+.faq details[open] summary::after { content: '−'; }
+.faq details p { margin: 0 0 16px; }
+
+.small { font-size: 14px; }
+.final .cta-row { margin-top: 18px; }
+
+@media (max-width: 560px) {
+  header.site { flex-direction: column; align-items: flex-start; gap: 12px; }
+  header.site nav { justify-content: flex-start; }
+  .hero-clock-time { letter-spacing: -5px; }
+}

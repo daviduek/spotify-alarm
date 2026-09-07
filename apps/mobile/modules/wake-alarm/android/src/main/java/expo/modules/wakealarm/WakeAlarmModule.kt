@@ -48,6 +48,11 @@ class WakeAlarmModule : Module() {
       registerEventReceiver()
     }
 
+    // reactContext can still be null in OnCreate; JS subscribing is a second, reliable chance.
+    OnStartObserving {
+      registerEventReceiver()
+    }
+
     OnDestroy {
       unregisterEventReceiver()
     }

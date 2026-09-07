@@ -7,7 +7,7 @@ const SPOTIFY_MESSAGES: Record<string, { tone: 'ok' | 'warn' | 'error'; text: st
   connected: { tone: 'ok', text: 'Spotify connected.' },
   disconnected: { tone: 'ok', text: 'Spotify disconnected.' },
   denied: { tone: 'warn', text: 'Spotify authorization was cancelled.' },
-  not_configured: { tone: 'warn', text: 'Spotify is not configured on the server yet (SPOTIFY_CLIENT_ID).' },
+  not_configured: { tone: 'warn', text: 'Spotify is not configured on the server yet (SPOTIFY_CLIENT_ID + SUPABASE_SERVICE_ROLE_KEY).' },
   state_mismatch: { tone: 'error', text: 'Spotify sign-in could not be verified. Try again.' },
   exchange_failed: { tone: 'error', text: 'Spotify sign-in failed. Try again.' },
   save_failed: { tone: 'error', text: 'Could not save the Spotify connection.' },

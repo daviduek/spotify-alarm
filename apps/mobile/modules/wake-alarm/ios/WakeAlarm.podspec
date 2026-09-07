@@ -6,7 +6,7 @@ Pod::Spec.new do |s|
   s.author         = 'Wake'
   s.homepage       = 'https://github.com/daviduek/spotify-alarm'
   s.platforms      = {
-    :ios => '16.4'
+    :ios => '26.0'
   }
   s.source         = { git: '' }
   s.static_framework = true

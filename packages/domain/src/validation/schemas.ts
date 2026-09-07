@@ -14,7 +14,7 @@ export const WeekdaySchema = z.union([
 
 export const RecurrenceSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('once') }),
-  z.object({ type: z.literal('weekly'), weekdays: z.array(WeekdaySchema).min(1) }),
+  z.object({ type: z.literal('weekly'), weekdays: z.array(WeekdaySchema).min(1).refine((a) => new Set(a).size === a.length, 'weekdays must be unique') }),
 ]);
 
 export const SnoozeConfigSchema = z.object({

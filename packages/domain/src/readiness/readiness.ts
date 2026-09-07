@@ -106,7 +106,7 @@ export function computeReadiness(input: ReadinessInput): AlarmReadiness {
     });
   }
 
-  if (planIncludesRecording(alarm.audioPlan) && input.recordingAvailable === false) {
+  if (planIncludesRecording(alarm.audioPlan) && input.recordingAvailable !== true) {
     issues.push({
       code: 'recording_file_missing',
       severity: 'warning',
@@ -117,6 +117,16 @@ export function computeReadiness(input: ReadinessInput): AlarmReadiness {
   }
 
   let spotifyReady: boolean | undefined;
+  if (!input.provider && planIncludesProvider(alarm.audioPlan)) {
+    spotifyReady = false;
+    issues.push({
+      code: 'provider_unknown',
+      severity: 'warning',
+      title: 'Music provider not checked',
+      detail: 'Wake could not verify your music provider. Your fallback sound will still play.',
+      action: 'connect_provider',
+    });
+  }
   if (input.provider && planIncludesProvider(alarm.audioPlan)) {
     const { name, readiness } = input.provider;
     spotifyReady = readiness === 'ready';

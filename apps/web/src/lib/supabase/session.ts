@@ -13,11 +13,14 @@ const AUTH_PAGES = ['/login', '/signup'];
 export async function updateSession(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  const isApi = pathname.startsWith('/api/');
 
   if (!isSupabaseConfigured()) {
     if (isProtected) {
+      if (isApi) return NextResponse.json({ error: 'not_configured' }, { status: 503 });
       const url = request.nextUrl.clone();
       url.pathname = '/login';
+      url.search = '';
       url.searchParams.set('error', 'not_configured');
       return NextResponse.redirect(url);
     }
@@ -44,8 +47,11 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   } = await supabase.auth.getUser();
 
   if (!user && isProtected) {
+    // API callers get a JSON 401 (a redirect would hand `fetch` an HTML login page).
+    if (isApi) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
     const url = request.nextUrl.clone();
     url.pathname = '/login';
+    url.search = '';
     url.searchParams.set('next', pathname);
     return NextResponse.redirect(url);
   }

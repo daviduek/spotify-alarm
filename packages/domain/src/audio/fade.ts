@@ -55,13 +55,15 @@ export function curveProgress(curve: FadeCurve, t: number): number {
     case 'logarithmic':
       // Perceptually smoother: fast early rise in linear gain ≈ even rise in loudness.
       return Math.log10(1 + 9 * x);
+    default:
+      return x;
   }
 }
 
 export function volumeAt(spec: FadeSpec, elapsedSeconds: number): number {
   const start = clampVolume(spec.startVolume);
   const end = clampVolume(spec.endVolume);
-  if (spec.durationSeconds <= 0 || elapsedSeconds >= spec.durationSeconds) return end;
+  if (!Number.isFinite(spec.durationSeconds) || spec.durationSeconds <= 0 || elapsedSeconds >= spec.durationSeconds) return end;
   if (elapsedSeconds <= 0) return start;
   const p = curveProgress(spec.curve, elapsedSeconds / spec.durationSeconds);
   return clampVolume(start + (end - start) * p);
@@ -75,10 +77,13 @@ export function volumeAt(spec: FadeSpec, elapsedSeconds: number): number {
 export function fadeSchedule(spec: FadeSpec, stepSeconds = 1): FadePoint[] {
   const step = stepSeconds > 0 ? stepSeconds : 1;
   const points: FadePoint[] = [];
-  if (spec.durationSeconds <= 0) {
+  if (!Number.isFinite(spec.durationSeconds) || spec.durationSeconds <= 0) {
     return [{ atSeconds: 0, volume: clampVolume(spec.endVolume) }];
   }
-  for (let t = 0; t < spec.durationSeconds; t += step) {
+  const count = Math.min(Math.ceil(spec.durationSeconds / step), 100_000);
+  for (let i = 0; i < count; i++) {
+    const t = i * step;
+    if (t >= spec.durationSeconds) break;
     points.push({ atSeconds: t, volume: volumeAt(spec, t) });
   }
   points.push({ atSeconds: spec.durationSeconds, volume: clampVolume(spec.endVolume) });

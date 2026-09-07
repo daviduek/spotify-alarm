@@ -13,6 +13,8 @@ type TimeIntent = Pick<Alarm, 'hour' | 'minute' | 'recurrence'>;
  * weekday intent directly rather than a list of instants (spec §38).
  */
 export function nextOccurrence(alarm: TimeIntent, now: Date = new Date()): Date | null {
+  if (!Number.isInteger(alarm.hour) || !Number.isInteger(alarm.minute) || alarm.hour < 0 || alarm.hour > 23 || alarm.minute < 0 || alarm.minute > 59) return null;
+  if (!Number.isFinite(now.getTime())) return null;
   for (let dayOffset = 0; dayOffset <= 7; dayOffset++) {
     const candidate = new Date(
       now.getFullYear(),

@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 
 import { AuthForm } from '../../components/AuthForm';
 
-export const metadata: Metadata = { title: 'Sign in — Wake' };
+export const metadata: Metadata = { title: 'Sign in' };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; error?: string }> }) {
   const { next, error } = await searchParams;

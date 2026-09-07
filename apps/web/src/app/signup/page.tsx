@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 
 import { AuthForm } from '../../components/AuthForm';
 
-export const metadata: Metadata = { title: 'Wake — Create account' };
+export const metadata: Metadata = { title: 'Create account' };
 
 export default function SignupPage() {
   return (

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = { title: 'Wake — build status' };
+export const metadata: Metadata = { title: 'Build status' };
 
 const phases = [
   { id: '0', name: 'Technical validation', state: 'in progress', note: 'Native AlarmKit + AlarmManager spikes, Spotify behaviour matrix on real devices.' },

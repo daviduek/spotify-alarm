@@ -219,3 +219,12 @@ drop policy if exists "recordings bucket: delete own" on storage.objects;
 create policy "recordings bucket: delete own" on storage.objects
   for delete to authenticated
   using (bucket_id = 'recordings' and (storage.foldername(name))[1] = auth.uid()::text);
+
+-- ---------------------------------------------------------------------------
+-- hardening: pin search_path and keep trigger-only functions off the RPC surface
+-- (applied as migration wake_harden_functions; kept here so the repo matches the DB)
+-- ---------------------------------------------------------------------------
+alter function public.set_updated_at() set search_path = '';
+alter function public.handle_new_user() set search_path = '';
+revoke execute on function public.set_updated_at() from public, anon, authenticated;
+revoke execute on function public.handle_new_user() from public, anon, authenticated;

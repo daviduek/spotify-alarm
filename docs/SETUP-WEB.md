@@ -52,3 +52,34 @@ En la app, Settings → **Connect Spotify** hace todo el OAuth con un solo botó
 El navegador no puede sonar con la pestaña cerrada. **Clock mode** mantiene la pestaña abierta y la pantalla encendida
 (Wake Lock) y suena a la hora exacta con pantalla completa y "mantené para apagar". Para alarma con el teléfono
 bloqueado, es la app nativa (en validación técnica). La web lo dice claramente, nunca promete lo que no puede.
+
+
+---
+
+## ✅ Ya hecho por mí (backend listo)
+
+Creé el proyecto Supabase **wake** en la org Eluter y apliqué el schema (6 tablas con RLS,
+bucket privado de grabaciones, triggers, hardening de seguridad — 0 advisories). Solo falta
+el deploy en Vercel + el paso de Auth URLs.
+
+### Variables para pegar en Vercel (Project → Settings → Environment Variables)
+
+Estas dos alcanzan para que login + alarmas + grabaciones funcionen. El anon key es **público**
+por diseño (va al bundle del browser), no es un secreto:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://ojuhtqqymfczzlsakdyu.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_Sz3-XXTkMf3HNAe55GZHWQ_Ua4JSY_3
+NEXT_PUBLIC_APP_URL=https://TU-URL-DE-VERCEL
+```
+
+Agregá `SPOTIFY_CLIENT_ID` cuando hagas el paso 3 (opcional).
+
+### Después del primer deploy — configurar Auth URLs en Supabase
+
+Andá a Supabase → proyecto **wake** → Authentication → URL Configuration:
+- **Site URL** = tu URL de Vercel (la misma de `NEXT_PUBLIC_APP_URL`).
+- **Redirect URLs** → agregá `https://TU-URL-DE-VERCEL/auth/callback`.
+- Para probar al instante sin mail de confirmación: Authentication → Providers → Email → desactivá "Confirm email".
+
+Dashboard del proyecto: <https://supabase.com/dashboard/project/ojuhtqqymfczzlsakdyu>

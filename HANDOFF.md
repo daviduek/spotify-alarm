@@ -34,9 +34,11 @@ Producto: despertador confiable con fuentes de audio inteligentes (Spotify, tu v
      env `SPOTIFY_CLIENT_ID` → redeploy. User Management: agregá tus emails. Reproducción requiere Premium.
 4. **Móvil (ver §5).**
 
-## 3. Qué cambió hoy (auditoría + mejoras)
+## 3. Qué cambió (auditoría + mejoras + i18n)
 
 Detalle hallazgo por hallazgo en `docs/AUDIT-2026-09-07.md`. Resumen:
+
+- **Bilingüe (2026-09-08):** toda la web EN/ES según Accept-Language del navegador, con switch EN|ES en el footer (cookie `wake_lang`). Español neutro (tú). Formatters del dominio aceptan locale.
 
 - **Bug crítico corregido:** Clock mode nunca disparaba la alarma (recalculaba "próxima" al vencer el timer).
   Ahora captura la ocurrencia, chequea cada segundo, tolera hasta 10 min de suspensión de la pestaña y

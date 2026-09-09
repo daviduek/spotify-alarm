@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { Inter } from 'next/font/google';
 import Link from 'next/link';
 import { Suspense } from 'react';
 
@@ -10,7 +11,9 @@ import { LocaleProvider } from '../lib/i18n/client';
 import { getLocale } from '../lib/i18n/server';
 import { getCurrentUser } from '../lib/supabase/server';
 
-const SITE_URL = env.appUrl || 'https://wakealarm.vercel.app';
+const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' });
+
+const SITE_URL = env.appUrl || 'https://alarma.dondavid.xyz';
 
 const META: Record<Locale, { title: string; description: string }> = {
   en: {
@@ -58,7 +61,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = await getLocale();
   const t = STR[locale];
   return (
-    <html lang={locale}>
+    <html lang={locale} className={inter.variable}>
       <body>
         <LocaleProvider locale={locale}>
           <div className="container">

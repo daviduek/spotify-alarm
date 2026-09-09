@@ -27,7 +27,7 @@ Producto: despertador confiable con fuentes de audio inteligentes (Spotify, tu v
    - <https://developer.spotify.com/dashboard> → Create app → Redirect URI exacta
      `https://alarma.dondavid.xyz/api/spotify/callback` → APIs: Web API + Web Playback SDK → Client ID → Vercel
      env `SPOTIFY_CLIENT_ID` → redeploy. User Management: agregá tus emails. Reproducción requiere Premium.
-4. **Móvil:** el primer build de Android YA está corriendo en EAS (lanzado 2026-09-09): https://expo.dev/accounts/daviduek/projects/spotify-alarm/builds/f01d6e6d-cfaf-4569-843d-9de8558a9408 — cuando termine, instalá el APK desde ese link en un Android 13+. iOS sigue en §5 (requiere Apple Developer + iPhone iOS 26+).
+4. **Móvil:** el primer build de Android TERMINÓ OK (2026-09-09). APK: https://expo.dev/artifacts/eas/HQ98suuWs5txy_Wpm-hw0bl9Gl_hExgHNZvmBgPVC4Q.apk (o desde https://expo.dev/accounts/daviduek/projects/spotify-alarm/builds). Instalalo en un Android 13+ y validá docs/TECHNICAL_VALIDATION.md filas A1–A6. iOS sigue en §5 (requiere Apple Developer + iPhone iOS 26+).
 
 ## 3. Qué cambió (auditoría + mejoras + i18n)
 

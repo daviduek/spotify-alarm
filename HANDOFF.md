@@ -9,6 +9,8 @@ Producto: despertador confiable con fuentes de audio inteligentes (Spotify, tu v
 
 ## 1. Qué está online
 
+> `master` ya apunta al producto (fast-forward 2026-09-09): push a `master` = deploy automático de producción en Vercel.
+
 - **Web en producción:** <https://wakealarm.vercel.app> (proyecto Vercel `wake`, root `apps/web`, repo GitHub
   conectado; producción se despliega por CLI `vercel --prod` desde la raíz del repo o al pushear a `master`).
 - **Backend:** Supabase `wake` (org Eluter, ref `ojuhtqqymfczzlsakdyu`), schema `0001` aplicado.
@@ -31,7 +33,7 @@ Producto: despertador confiable con fuentes de audio inteligentes (Spotify, tu v
    - <https://developer.spotify.com/dashboard> → Create app → Redirect URI exacta
      `https://wakealarm.vercel.app/api/spotify/callback` → APIs: Web API + Web Playback SDK → Client ID → Vercel
      env `SPOTIFY_CLIENT_ID` → redeploy. User Management: agregá tus emails. Reproducción requiere Premium.
-4. **Móvil (ver §5).**
+4. **Móvil:** el primer build de Android YA está corriendo en EAS (lanzado 2026-09-09): https://expo.dev/accounts/daviduek/projects/spotify-alarm/builds/f01d6e6d-cfaf-4569-843d-9de8558a9408 — cuando termine, instalá el APK desde ese link en un Android 13+. iOS sigue en §5 (requiere Apple Developer + iPhone iOS 26+).
 
 ## 3. Qué cambió (auditoría + mejoras + i18n)
 
@@ -102,8 +104,8 @@ pantalla completa. La alarma con teléfono bloqueado es la app nativa (§5). La 
 ## 7. Pendientes sugeridos
 
 - [ ] Vos: Auth URLs (§2.1) y Spotify (§2.3). La migración 0002 ya está aplicada.
-- [ ] Vos: primer `eas build` Android; luego iOS.
+- [ ] Vos: instalar el APK de Android (build ya lanzado) y validar docs/TECHNICAL_VALIDATION.md; luego iOS.
 - [ ] Dominio propio (ej. `wake.eluter.com`) → actualizar `NEXT_PUBLIC_APP_URL` y redirect URIs.
-- [ ] CSP en modo report-only; persistir time zone en `profiles`; reconciliación offline (IndexedDB).
+- [ ] Reconciliación offline completa (hoy: cache localStorage de alarmas en Clock mode). CSP report-only y time zone: hechos.
 - [ ] Onboarding + "before-sleep check" en web (spec §28/§29).
 - [ ] Móvil Fase 1: fallback iOS < 26 (critical alerts + background audio), Live Activity para countdown.

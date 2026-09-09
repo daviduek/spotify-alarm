@@ -24,8 +24,8 @@ const META: Record<Locale, { title: string; description: string }> = {
 };
 
 const STR: Record<Locale, { how: string; mobile: string; status: string; signIn: string; openApp: string; notAffiliated: string; source: string; privacy: string; terms: string }> = {
-  en: { how: 'How it works', mobile: 'Mobile', status: 'Status', signIn: 'Sign in', openApp: 'Open app', notAffiliated: 'Working title — not affiliated with Spotify AB.', source: 'Source', privacy: 'Privacy', terms: 'Terms' },
-  es: { how: 'Cómo funciona', mobile: 'Móvil', status: 'Estado', signIn: 'Iniciar sesión', openApp: 'Abrir app', notAffiliated: 'Nombre provisorio — sin afiliación con Spotify AB.', source: 'Código', privacy: 'Privacidad', terms: 'Términos' },
+  en: { how: 'FAQ', mobile: 'Mobile', status: 'Status', signIn: 'Sign in', openApp: 'Open app', notAffiliated: 'Working title — not affiliated with Spotify AB.', source: 'Source', privacy: 'Privacy', terms: 'Terms' },
+  es: { how: 'FAQ', mobile: 'Móvil', status: 'Estado', signIn: 'Iniciar sesión', openApp: 'Abrir app', notAffiliated: 'Nombre provisorio — sin afiliación con Spotify AB.', source: 'Código', privacy: 'Privacidad', terms: 'Términos' },
 };
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -67,7 +67,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <span className="brand-dot" aria-hidden="true" />Wake
               </Link>
               <nav aria-label="Main">
-                <Link href="/#how">{t.how}</Link>
+                <Link href="/#faq">{t.how}</Link>
                 <Link href="/#mobile">{t.mobile}</Link>
                 <Link href="/status">{t.status}</Link>
                 <Suspense fallback={<Link href="/login">{t.signIn}</Link>}>

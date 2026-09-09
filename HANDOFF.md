@@ -22,7 +22,7 @@ Producto: despertador confiable con fuentes de audio inteligentes (Spotify, tu v
 1. ~~Auth URL Configuration~~ **HECHO (2026-09-09, vía Cowork)**: Site URL y Redirect URLs configuradas; "Confirm email" desactivado para pruebas — **reactivarlo antes de abrir la app a usuarios reales**. (Recomendado pendiente: Email Templates con {{ .TokenHash }} para links que funcionen en otro dispositivo.)
 2. ~~Aplicar `supabase/migrations/0002_hardening.sql`~~ **HECHO (2026-09-09)**: aplicada al proyecto wake, 0 advisories de seguridad.
 3. ~~Spotify~~ **HECHO (2026-09-09)**: app "Wake" en el Spotify Dashboard con ambas redirect URIs, SPOTIFY_CLIENT_ID + SUPABASE_SERVICE_ROLE_KEY en Vercel, OAuth probado de punta a punta (Conectado · premium). Nota: la app está en Development mode — solo los emails agregados en User Management pueden conectar; para abrirla a terceros, pedir quota extension en el dashboard de Spotify.
-4. **Móvil:** el primer build de Android TERMINÓ OK (2026-09-09). APK: https://expo.dev/artifacts/eas/HQ98suuWs5txy_Wpm-hw0bl9Gl_hExgHNZvmBgPVC4Q.apk (o desde https://expo.dev/accounts/daviduek/projects/spotify-alarm/builds). Instalalo en un Android 13+ y validá docs/TECHNICAL_VALIDATION.md filas A1–A6. iOS sigue en §5 (requiere Apple Developer + iPhone iOS 26+).
+4. **Móvil:** el primer build de Android TERMINÓ OK (2026-09-09). APK: https://expo.dev/artifacts/eas/i9WIAdg4saPJXh7U0SjRl-qbMqQ0gtyTYHsOLbzU0Co.apk (v2: bilingüe + cuenta con sync) (o desde https://expo.dev/accounts/daviduek/projects/spotify-alarm/builds). Instalalo en un Android 13+ y validá docs/TECHNICAL_VALIDATION.md filas A1–A6. iOS sigue en §5 (requiere Apple Developer + iPhone iOS 26+).
 
 ## 3. Qué cambió (auditoría + mejoras + i18n)
 

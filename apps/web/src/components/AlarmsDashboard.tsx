@@ -14,7 +14,7 @@ import {
   type Alarm,
 } from '@wake/domain';
 
-import { deleteAlarmRow, fetchAlarms, setAlarmEnabled } from '../lib/data/alarms';
+import { deleteAlarmRow, ensureFlushLoop, fetchAlarms, setAlarmEnabled } from '../lib/data/offlineAlarms';
 import type { Locale } from '../lib/i18n';
 import { useLocale } from '../lib/i18n/client';
 import { getSupabaseBrowserClient } from '../lib/supabase/client';
@@ -97,18 +97,23 @@ export function AlarmsDashboard({ userId }: { userId: string }) {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    try {
-      setAlarms(await fetchAlarms(supabase, userId));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t.loadError);
+    const { alarms: list, fromCache } = await fetchAlarms(supabase, userId);
+    // Offline with cached data: show the cache silently. Only surface the load
+    // error when there is no cached data at all.
+    if (fromCache && list.length === 0) {
+      setError(t.loadError);
+      return;
     }
+    setError(null);
+    setAlarms(list);
   }, [supabase, userId, t]);
 
   useEffect(() => {
+    ensureFlushLoop(supabase);
     void load();
     const timer = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(timer);
-  }, [load]);
+  }, [supabase, load]);
 
   const toggle = async (alarm: Alarm, enabled: boolean) => {
     setAlarms((prev) => prev?.map((a) => (a.id === alarm.id ? { ...a, enabled } : a)) ?? null);

@@ -22,7 +22,7 @@ import {
   type Weekday,
 } from '@wake/domain';
 
-import { insertAlarm, updateAlarm } from '../lib/data/alarms';
+import { ensureFlushLoop, insertAlarm, updateAlarm } from '../lib/data/offlineAlarms';
 import type { Locale } from '../lib/i18n';
 import { useLocale } from '../lib/i18n/client';
 import { getSupabaseBrowserClient } from '../lib/supabase/client';
@@ -165,6 +165,9 @@ export function AlarmEditor({ userId, existing, spotifyConnected }: { userId: st
     setSaving(true);
     setError(null);
     try {
+      ensureFlushLoop(supabase);
+      // Offline-first: the write lands in IndexedDB immediately and is queued
+      // for Supabase, so saving succeeds even without a connection.
       const draft = buildDraft();
       if (existing) await updateAlarm(supabase, userId, existing.id, draft);
       else await insertAlarm(supabase, userId, draft);

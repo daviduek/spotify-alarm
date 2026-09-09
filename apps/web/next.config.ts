@@ -15,10 +15,11 @@ const nextConfig: NextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'microphone=(self), autoplay=(self), screen-wake-lock=(self)' },
           {
-            // Report-only first: watch the console in prod for violations before enforcing.
-            key: 'Content-Security-Policy-Report-Only',
+            // Enforced CSP (was report-only). Broad enough for the Spotify Web Playback SDK
+            // (sdk.scdn.co script + iframe, wss dealer, api/spclient endpoints) and Supabase.
+            key: 'Content-Security-Policy',
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline' https://sdk.scdn.co; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' blob: data: https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.spotify.com; frame-src https://sdk.scdn.co; font-src 'self' data:; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://accounts.spotify.com",
+              "default-src 'self'; script-src 'self' 'unsafe-inline' https://sdk.scdn.co https://*.scdn.co; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob: data: https://*.supabase.co https://*.scdn.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.spotify.com https://*.spotify.com wss://*.spotify.com https://*.scdn.co; frame-src https://sdk.scdn.co https://*.spotify.com; font-src 'self' data:; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://accounts.spotify.com",
           },
         ],
       },

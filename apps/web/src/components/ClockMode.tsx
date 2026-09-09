@@ -15,7 +15,7 @@ import {
   type Alarm,
 } from '@wake/domain';
 
-import { fetchAlarms, setAlarmEnabled } from '../lib/data/alarms';
+import { ensureFlushLoop, fetchAlarms, setAlarmEnabled } from '../lib/data/offlineAlarms';
 import { recordEvent } from '../lib/data/history';
 import { signedUrl } from '../lib/data/recordings';
 import { AlarmClock } from '../lib/engine/alarmClock';
@@ -27,9 +27,6 @@ import { SpotifyBrowserPlayer } from '../lib/spotify/player';
 import { getSupabaseBrowserClient } from '../lib/supabase/client';
 
 type Ringing = { alarm: Alarm; eventId: string; scheduledAt: Date; firedAt: number; snoozeCount: number };
-
-/** Last alarms this device saw — lets Clock mode ring even if the server is unreachable at load. */
-const ALARM_CACHE_KEY = 'wake_alarms_cache_v1';
 
 const STR: Record<Locale, {
   wakeSoundPlaying: string;
@@ -257,27 +254,13 @@ export function ClockMode({ userId, spotifyConnected }: { userId: string; spotif
   );
 
   useEffect(() => {
-    fetchAlarms(supabase, userId)
-      .then((list) => {
-        setAlarms(list);
-        try {
-          localStorage.setItem(ALARM_CACHE_KEY, JSON.stringify(list));
-        } catch {
-          /* storage unavailable */
-        }
-      })
-      .catch(() => {
-        // Offline / server error: fall back to the last alarms this device saw (local-first).
-        try {
-          const raw = localStorage.getItem(ALARM_CACHE_KEY);
-          if (raw) {
-            setAlarms(JSON.parse(raw) as Alarm[]);
-            setWarning(tRef.current.offlineWarning);
-          }
-        } catch {
-          /* ignore */
-        }
-      });
+    ensureFlushLoop(supabase);
+    // Offline-first: the layer falls back to the IndexedDB cache when the
+    // server is unreachable, so Clock mode can still ring (local-first).
+    void fetchAlarms(supabase, userId).then(({ alarms: list, fromCache }) => {
+      setAlarms(list);
+      if (fromCache) setWarning(tRef.current.offlineWarning);
+    });
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, [supabase, userId]);

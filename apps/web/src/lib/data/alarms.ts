@@ -65,8 +65,11 @@ export async function fetchAlarm(supabase: SupabaseClient, userId: string, id: s
   return data ? rowToAlarm(data as AlarmRow) : null;
 }
 
-export async function insertAlarm(supabase: SupabaseClient, userId: string, draft: AlarmDraft): Promise<Alarm> {
-  const { data, error } = await supabase.from('alarms').insert({ ...draftToRow(draft), user_id: userId }).select('*').single();
+export async function insertAlarm(supabase: SupabaseClient, userId: string, draft: AlarmDraft, id?: string): Promise<Alarm> {
+  // `id` is optional: the offline layer generates it client-side (crypto.randomUUID)
+  // so an alarm created offline keeps its id when the outbox flushes. The alarms
+  // table's `id uuid primary key default gen_random_uuid()` accepts explicit ids.
+  const { data, error } = await supabase.from('alarms').insert({ ...draftToRow(draft), ...(id ? { id } : {}), user_id: userId }).select('*').single();
   if (error) throw new Error(error.message);
   const alarm = rowToAlarm(data as AlarmRow);
   if (!alarm) throw new Error('Alarm failed validation after insert');

@@ -11,7 +11,7 @@ Producto: despertador confiable con fuentes de audio inteligentes (Spotify, tu v
 
 > `master` ya apunta al producto (fast-forward 2026-09-09): push a `master` = deploy automático de producción en Vercel.
 
-- **Web en producción:** <https://wakealarm.vercel.app> (proyecto Vercel `wake`, root `apps/web`, repo GitHub
+- **Web en producción:** <https://alarma.dondavid.xyz> (dominio canónico desde 2026-09-09; https://wakealarm.vercel.app sigue sirviendo) (proyecto Vercel `wake`, root `apps/web`, repo GitHub
   conectado; producción se despliega por CLI `vercel --prod` desde la raíz del repo o al pushear a `master`).
 - **Backend:** Supabase `wake` (org Eluter, ref `ojuhtqqymfczzlsakdyu`), schema `0001` aplicado.
 - Variables ya cargadas en Vercel (production + preview): `NEXT_PUBLIC_SUPABASE_URL`,
@@ -25,7 +25,7 @@ Producto: despertador confiable con fuentes de audio inteligentes (Spotify, tu v
    - Supabase → Project Settings → API keys → copiá la **service_role** (o creá una secret key `sb_secret_…`)
      → Vercel env `SUPABASE_SERVICE_ROLE_KEY` (solo server; nunca `NEXT_PUBLIC_`).
    - <https://developer.spotify.com/dashboard> → Create app → Redirect URI exacta
-     `https://wakealarm.vercel.app/api/spotify/callback` → APIs: Web API + Web Playback SDK → Client ID → Vercel
+     `https://alarma.dondavid.xyz/api/spotify/callback` → APIs: Web API + Web Playback SDK → Client ID → Vercel
      env `SPOTIFY_CLIENT_ID` → redeploy. User Management: agregá tus emails. Reproducción requiere Premium.
 4. **Móvil:** el primer build de Android YA está corriendo en EAS (lanzado 2026-09-09): https://expo.dev/accounts/daviduek/projects/spotify-alarm/builds/f01d6e6d-cfaf-4569-843d-9de8558a9408 — cuando termine, instalá el APK desde ese link en un Android 13+. iOS sigue en §5 (requiere Apple Developer + iPhone iOS 26+).
 

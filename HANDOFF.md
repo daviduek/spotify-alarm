@@ -19,13 +19,7 @@ Producto: despertador confiable con fuentes de audio inteligentes (Spotify, tu v
 
 ## 2. Lo que te queda a vos (orden de prioridad)
 
-1. **Supabase → Authentication → URL Configuration** (2 min):
-   - Site URL: `https://wakealarm.vercel.app`
-   - Redirect URLs: `https://wakealarm.vercel.app/auth/callback` y `https://wakealarm.vercel.app/**`
-   - Para probar sin mail de confirmación: Providers → Email → desactivar "Confirm email".
-   - (Recomendado) Email Templates: usar links con `{{ .TokenHash }}`
-     (`{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email|recovery|magiclink`) para que el link
-     funcione aunque lo abras en otro dispositivo. El callback ya soporta ambos formatos.
+1. ~~Auth URL Configuration~~ **HECHO (2026-09-09, vía Cowork)**: Site URL y Redirect URLs configuradas; "Confirm email" desactivado para pruebas — **reactivarlo antes de abrir la app a usuarios reales**. (Recomendado pendiente: Email Templates con {{ .TokenHash }} para links que funcionen en otro dispositivo.)
 2. ~~Aplicar `supabase/migrations/0002_hardening.sql`~~ **HECHO (2026-09-09)**: aplicada al proyecto wake, 0 advisories de seguridad.
 3. **Spotify (opcional):**
    - Supabase → Project Settings → API keys → copiá la **service_role** (o creá una secret key `sb_secret_…`)
@@ -103,7 +97,7 @@ pantalla completa. La alarma con teléfono bloqueado es la app nativa (§5). La 
 
 ## 7. Pendientes sugeridos
 
-- [ ] Vos: Auth URLs (§2.1) y Spotify (§2.3). La migración 0002 ya está aplicada.
+- [ ] Vos: Spotify (§2.3). Auth URLs y migración 0002: hechas. Reactivar "Confirm email" antes de usuarios reales.
 - [ ] Vos: instalar el APK de Android (build ya lanzado) y validar docs/TECHNICAL_VALIDATION.md; luego iOS.
 - [ ] Dominio propio (ej. `wake.eluter.com`) → actualizar `NEXT_PUBLIC_APP_URL` y redirect URIs.
 - [ ] Reconciliación offline completa (hoy: cache localStorage de alarmas en Clock mode). CSP report-only y time zone: hechos.

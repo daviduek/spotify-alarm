@@ -3,7 +3,14 @@ import { redirect } from 'next/navigation';
 
 import { AppTabs } from '../../components/AppTabs';
 import { isSupabaseConfigured } from '../../lib/env';
+import type { Locale } from '../../lib/i18n';
+import { getLocale } from '../../lib/i18n/server';
 import { getCurrentUser } from '../../lib/supabase/server';
+
+const STR: Record<Locale, { signOut: string }> = {
+  en: { signOut: 'Sign out' },
+  es: { signOut: 'Cerrar sesión' },
+};
 
 // The whole /app area is per-user and session-dependent — never statically prerendered.
 export const dynamic = 'force-dynamic';
@@ -12,6 +19,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!isSupabaseConfigured()) redirect('/login?error=not_configured');
   const user = await getCurrentUser();
   if (!user) redirect('/login?next=/app');
+  const locale = await getLocale();
+  const t = STR[locale];
 
   return (
     <div className="app-shell">
@@ -22,7 +31,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <AppTabs />
         <form action="/auth/signout" method="post">
           <button type="submit" className="btn btn-ghost" style={{ minHeight: 38, padding: '0 12px', fontSize: 13 }}>
-            Sign out
+            {t.signOut}
           </button>
         </form>
       </nav>

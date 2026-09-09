@@ -3,22 +3,27 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-const TABS = [
-  { href: '/app', label: 'Alarms' },
-  { href: '/app/clock', label: 'Clock' },
-  { href: '/app/sounds', label: 'Sounds' },
-  { href: '/app/settings', label: 'Settings' },
-];
+import type { Locale } from '../lib/i18n';
+import { useLocale } from '../lib/i18n/client';
+
+const TAB_LABELS: Record<Locale, string[]> = {
+  en: ['Alarms', 'Clock', 'Sounds', 'Settings'],
+  es: ['Alarmas', 'Reloj', 'Sonidos', 'Ajustes'],
+};
+
+const TAB_HREFS = ['/app', '/app/clock', '/app/sounds', '/app/settings'];
 
 export function AppTabs() {
   const pathname = usePathname();
+  const locale = useLocale();
+  const labels = TAB_LABELS[locale];
   return (
     <div className="tabs">
-      {TABS.map((t) => {
-        const active = t.href === '/app' ? pathname === '/app' : pathname.startsWith(t.href);
+      {TAB_HREFS.map((href, i) => {
+        const active = href === '/app' ? pathname === '/app' : pathname.startsWith(href);
         return (
-          <Link key={t.href} href={t.href} className={active ? 'active' : ''}>
-            {t.label}
+          <Link key={href} href={href} className={active ? 'active' : ''}>
+            {labels[i]}
           </Link>
         );
       })}

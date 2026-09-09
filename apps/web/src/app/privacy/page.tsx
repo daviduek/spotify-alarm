@@ -1,8 +1,16 @@
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = { title: 'Privacy Policy' };
+import type { Locale } from '../../lib/i18n';
+import { getLocale } from '../../lib/i18n/server';
 
-export default function PrivacyPage() {
+const TITLE: Record<Locale, string> = { en: 'Privacy Policy', es: 'Política de Privacidad' };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return { title: TITLE[locale] };
+}
+
+function PrivacyEn() {
   return (
     <article className="legal">
       <h1>Privacy Policy</h1>
@@ -49,4 +57,58 @@ export default function PrivacyPage() {
       <p>Questions: open an issue at <a href="https://github.com/daviduek/spotify-alarm">github.com/daviduek/spotify-alarm</a>.</p>
     </article>
   );
+}
+
+function PrivacyEs() {
+  return (
+    <article className="legal">
+      <h1>Política de Privacidad</h1>
+      <p>Última actualización: septiembre de 2026 · Aplica a la aplicación móvil Wake (nombre provisorio) y a este sitio web.</p>
+
+      <h2>Resumen</h2>
+      <ul>
+        <li>Wake funciona sin cuenta. Tus alarmas, ajustes y grabaciones se guardan solo en tu dispositivo.</li>
+        <li>Las grabaciones de voz nunca salen de tu teléfono. No las subimos, analizamos ni respaldamos.</li>
+        <li>Si conectas Spotify, la autenticación ocurre en las páginas propias de Spotify. Wake nunca ve tu contraseña de Spotify.</li>
+        <li>Los tokens de acceso de Spotify se guardan en el almacenamiento seguro del dispositivo (iOS Keychain / Android Keystore) y nunca se registran ni se nos transmiten.</li>
+        <li>Wake actualmente no tiene servidores propios y no recopila analíticas.</li>
+      </ul>
+
+      <h2>Datos que procesamos en tu dispositivo</h2>
+      <ul>
+        <li>Configuración de alarmas (hora, días, sonido, volumen, snooze, vibración).</li>
+        <li>Grabaciones de audio que creas, guardadas en el almacenamiento privado de la app.</li>
+        <li>Un historial local de alarmas (cuándo una alarma fue programada, sonó, se detuvo o se pospuso con snooze) usado solo para ayudarte a ti y a nosotros a entender la confiabilidad. No contiene audio.</li>
+        <li>Información de diagnóstico mostrada en la pantalla de Diagnósticos dentro de la app (versión del sistema operativo, estado de permisos). Se te muestra a ti y no se envía a ningún lado automáticamente.</li>
+      </ul>
+
+      <h2>Spotify</h2>
+      <p>
+        Cuando eliges conectar Spotify, Wake solicita los permisos mínimos necesarios para listar tus playlists, buscar, e iniciar o pausar la reproducción en tu
+        dispositivo. La política de privacidad propia de Spotify rige los datos procesados por Spotify. Puedes desconectarla en cualquier momento desde la app; esto elimina los tokens guardados.
+        También puedes revocar el acceso en <a href="https://www.spotify.com/account/apps/">spotify.com/account/apps</a>.
+      </p>
+
+      <h2>Permisos</h2>
+      <ul>
+        <li>Alarmas y recordatorios / AlarmKit: requerido para que las alarmas suenen con el teléfono bloqueado.</li>
+        <li>Micrófono: solo mientras grabas un mensaje para despertarte.</li>
+        <li>Notificaciones y alarma en pantalla completa (Android): para mostrar DETENER / SNOOZE con el teléfono bloqueado.</li>
+      </ul>
+
+      <h2>Menores</h2>
+      <p>Wake no está dirigida a menores de 13 años y no recopila a sabiendas información personal de ellos.</p>
+
+      <h2>Cambios</h2>
+      <p>Si Wake incorpora en el futuro cuentas opcionales, sincronización o analíticas, esta política se actualizará antes de que esas funciones se publiquen, y serán opcionales (opt-in).</p>
+
+      <h2>Contacto</h2>
+      <p>Preguntas: abre un issue en <a href="https://github.com/daviduek/spotify-alarm">github.com/daviduek/spotify-alarm</a>.</p>
+    </article>
+  );
+}
+
+export default async function PrivacyPage() {
+  const locale = await getLocale();
+  return locale === 'es' ? <PrivacyEs /> : <PrivacyEn />;
 }

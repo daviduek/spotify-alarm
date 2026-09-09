@@ -26,6 +26,15 @@ export function findWakeSound(id: string): WakeSound | undefined {
   return WAKE_SOUNDS.find((s) => s.id === id);
 }
 
-export function wakeSoundName(id: string): string | undefined {
+const SOUND_NAMES_ES: Record<string, string> = {
+  sunrise: 'Amanecer',
+  soft: 'Suave',
+  piano: 'Piano suave',
+  birds: 'Pájaros',
+  classic: 'Alarma clásica',
+};
+
+export function wakeSoundName(id: string, locale: 'en' | 'es' = 'en'): string | undefined {
+  if (locale === 'es' && SOUND_NAMES_ES[id]) return SOUND_NAMES_ES[id];
   return findWakeSound(id)?.name;
 }

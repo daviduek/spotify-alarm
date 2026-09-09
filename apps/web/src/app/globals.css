@@ -405,3 +405,8 @@ header.site nav .nav-cta { color: var(--text); font-weight: 600; }
   header.site nav { justify-content: flex-start; }
   .hero-clock-time { letter-spacing: -5px; }
 }
+
+/* Language switch (footer) */
+.lang-switch button { background: none; border: none; color: var(--dim); cursor: pointer; font: inherit; font-size: inherit; padding: 0; }
+.lang-switch button.on { color: var(--text); font-weight: 700; }
+.lang-switch button:hover { text-decoration: underline; }

@@ -20,17 +20,128 @@ import { recordEvent } from '../lib/data/history';
 import { signedUrl } from '../lib/data/recordings';
 import { AlarmClock } from '../lib/engine/alarmClock';
 import { WebAudioEngine } from '../lib/engine/webAudio';
+import type { Locale } from '../lib/i18n';
+import { useLocale } from '../lib/i18n/client';
 import { soundUrl } from '../lib/sounds';
 import { SpotifyBrowserPlayer } from '../lib/spotify/player';
 import { getSupabaseBrowserClient } from '../lib/supabase/client';
 
 type Ringing = { alarm: Alarm; eventId: string; scheduledAt: Date; firedAt: number; snoozeCount: number };
 
+const STR: Record<Locale, {
+  wakeSoundPlaying: string;
+  tapToAllowSound: string;
+  startingSpotify: string;
+  spotifyNotPlaying: string;
+  yourRecording: string;
+  myRecording: string;
+  recordingFailed: string;
+  recordingNotFound: string;
+  hiddenTabWarning: string;
+  soundNotAllowedWarning: string;
+  snoozedUntil: (time: string) => string;
+  alarmRinging: string;
+  holdToStopAria: string;
+  keepHolding: string;
+  holdToStop: string;
+  snoozeButton: (minutes: number) => string;
+  nextAlarm: string;
+  inWord: string;
+  noAlarm: string;
+  clockArmed: string;
+  armedHint: string;
+  disarm: string;
+  armHint: string;
+  enableFirst: string;
+  armClockMode: string;
+  footerBefore: string;
+  footerLink: string;
+  footerAfter: string;
+  testAlarm: string;
+  spotifyNoDevice: string;
+  spotifyPremium: string;
+  spotifyNotConnected: string;
+  spotifyGeneric: string;
+}> = {
+  en: {
+    wakeSoundPlaying: 'Wake sound playing',
+    tapToAllowSound: 'Tap the screen to allow sound',
+    startingSpotify: 'Wake sound playing · starting Spotify…',
+    spotifyNotPlaying: "Spotify accepted the request but isn't playing. Your fallback alarm keeps ringing.",
+    yourRecording: 'Your recording',
+    myRecording: 'My recording',
+    recordingFailed: 'Your recording could not play. Fallback sound is ringing.',
+    recordingNotFound: 'Recording not found. Fallback sound is ringing.',
+    hiddenTabWarning: 'This tab was hidden. Keep Wake in the foreground so the alarm can ring on time.',
+    soundNotAllowedWarning: "Your browser didn't allow sound yet. If the alarm is silent, tap the screen when it rings.",
+    snoozedUntil: (time) => `Snoozed until ${time}`,
+    alarmRinging: 'Alarm ringing',
+    holdToStopAria: 'Hold to stop the alarm',
+    keepHolding: 'KEEP HOLDING…',
+    holdToStop: 'HOLD TO STOP',
+    snoozeButton: (minutes) => `SNOOZE ${minutes} MIN`,
+    nextAlarm: 'Next alarm',
+    inWord: 'in',
+    noAlarm: 'No alarm scheduled',
+    clockArmed: 'Clock armed · keep this tab open',
+    armedHint: 'Wake will ring in this browser at the alarm time. The screen stays awake when your browser allows it.',
+    disarm: 'Disarm',
+    armHint: 'Turn this device into a nightstand clock. Tap once to allow sound, then keep the tab open.',
+    enableFirst: 'Enable an alarm first',
+    armClockMode: 'Arm clock mode',
+    footerBefore: "Browsers can't ring a closed tab, so Clock mode needs the tab open and the screen on. For a real locked-phone alarm, install the Wake mobile app. Manage alarms in ",
+    footerLink: 'Alarms',
+    footerAfter: '.',
+    testAlarm: 'Test alarm now',
+    spotifyNoDevice: "Spotify couldn't start on this device. Your fallback alarm is playing.",
+    spotifyPremium: 'Spotify playback needs Premium. Your fallback alarm is playing.',
+    spotifyNotConnected: 'Spotify is not connected. Your fallback alarm is playing.',
+    spotifyGeneric: "Spotify couldn't start. Your fallback alarm is playing instead.",
+  },
+  es: {
+    wakeSoundPlaying: 'Sonido de Wake sonando',
+    tapToAllowSound: 'Toca la pantalla para permitir el sonido',
+    startingSpotify: 'Sonido de Wake sonando · iniciando Spotify…',
+    spotifyNotPlaying: 'Spotify aceptó la solicitud pero no está reproduciendo. Tu alarma de respaldo sigue sonando.',
+    yourRecording: 'Tu grabación',
+    myRecording: 'Mi grabación',
+    recordingFailed: 'Tu grabación no se pudo reproducir. El sonido de respaldo está sonando.',
+    recordingNotFound: 'No se encontró la grabación. El sonido de respaldo está sonando.',
+    hiddenTabWarning: 'Esta pestaña quedó oculta. Mantén Wake en primer plano para que la alarma pueda sonar a tiempo.',
+    soundNotAllowedWarning: 'Tu navegador todavía no permitió el sonido. Si la alarma no suena, toca la pantalla cuando se active.',
+    snoozedUntil: (time) => `Snooze hasta las ${time}`,
+    alarmRinging: 'Alarma sonando',
+    holdToStopAria: 'Mantén presionado para detener la alarma',
+    keepHolding: 'SIGUE PRESIONANDO…',
+    holdToStop: 'MANTÉN PARA DETENER',
+    snoozeButton: (minutes) => `SNOOZE ${minutes} MIN`,
+    nextAlarm: 'Próxima alarma',
+    inWord: 'en',
+    noAlarm: 'Sin alarmas programadas',
+    clockArmed: 'Reloj activado · mantén esta pestaña abierta',
+    armedHint: 'Wake sonará en este navegador a la hora de la alarma. La pantalla se mantiene encendida cuando tu navegador lo permite.',
+    disarm: 'Desactivar',
+    armHint: 'Convierte este dispositivo en un reloj de mesa. Toca una vez para permitir el sonido y deja la pestaña abierta.',
+    enableFirst: 'Primero activa una alarma',
+    armClockMode: 'Activar modo reloj',
+    footerBefore: 'Los navegadores no pueden hacer sonar una pestaña cerrada, así que el modo Reloj necesita la pestaña abierta y la pantalla encendida. Para una alarma real con el teléfono bloqueado, instala la app móvil de Wake. Administra tus alarmas en ',
+    footerLink: 'Alarmas',
+    footerAfter: '.',
+    testAlarm: 'Probar alarma ahora',
+    spotifyNoDevice: 'Spotify no pudo iniciarse en este dispositivo. Tu alarma de respaldo está sonando.',
+    spotifyPremium: 'La reproducción de Spotify necesita Premium. Tu alarma de respaldo está sonando.',
+    spotifyNotConnected: 'Spotify no está conectado. Tu alarma de respaldo está sonando.',
+    spotifyGeneric: 'Spotify no pudo iniciarse. Tu alarma de respaldo está sonando en su lugar.',
+  },
+};
+
 /** Nightstand mode: keep this tab open and Wake rings at the alarm time in the browser. */
 export function ClockMode({ userId, spotifyConnected }: { userId: string; spotifyConnected: boolean }) {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const audio = useMemo(() => new WebAudioEngine(), []);
   const spotify = useMemo(() => new SpotifyBrowserPlayer(), []);
+  const locale = useLocale();
+  const t = STR[locale];
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [armed, setArmed] = useState(false);
   const [now, setNow] = useState(new Date());
@@ -50,7 +161,7 @@ export function ClockMode({ userId, spotifyConnected }: { userId: string; spotif
     async (alarm: Alarm, scheduledAt: Date, snoozeCount = 0, eventId = crypto.randomUUID()) => {
       const firedAt = Date.now();
       setRinging({ alarm, eventId, scheduledAt, firedAt, snoozeCount });
-      setStatus('Wake sound playing');
+      setStatus(t.wakeSoundPlaying);
       void recordEvent(supabase, userId, { id: eventId, alarmId: alarm.id, scheduledAt: scheduledAt.toISOString(), firedAt: new Date(firedAt).toISOString(), snoozeCount, audioSourceUsed: 'fallback' });
 
       // One-shot alarms are consumed once they ring (otherwise they would ring again tomorrow).
@@ -62,11 +173,11 @@ export function ClockMode({ userId, spotifyConnected }: { userId: string; spotif
 
       const fade = alarm.fadeIn.enabled ? alarm.fadeIn : fadeConfigFromPreset('normal');
       const audible = await audio.startFallback(soundUrl(alarm.fallbackSoundId), alarm.fadeIn.enabled ? fade : { ...fade, enabled: false });
-      if (!audible) setStatus('Tap the screen to allow sound');
+      if (!audible) setStatus(t.tapToAllowSound);
 
       const source = primarySource(alarm.audioPlan);
       if (source?.type === 'music' && planIncludesProvider(alarm.audioPlan, 'spotify')) {
-        setStatus('Wake sound playing · starting Spotify…');
+        setStatus(t.startingSpotify);
         const outcome = await spotify.play(source.uri);
         if (outcome.success) {
           // Only silence the fallback once Spotify is *actually* producing audio.
@@ -76,11 +187,11 @@ export function ClockMode({ userId, spotifyConnected }: { userId: string; spotif
             setStatus(`Spotify · ${source.title}`);
             void recordEvent(supabase, userId, { id: eventId, alarmId: alarm.id, scheduledAt: scheduledAt.toISOString(), providerAttempted: true, providerSucceeded: true, audioSourceUsed: 'music' });
           } else {
-            setStatus("Spotify accepted the request but isn't playing. Your fallback alarm keeps ringing.");
+            setStatus(t.spotifyNotPlaying);
             void recordEvent(supabase, userId, { id: eventId, alarmId: alarm.id, scheduledAt: scheduledAt.toISOString(), providerAttempted: true, providerSucceeded: false, providerFailureReason: 'not_playing' });
           }
         } else {
-          setStatus(spotifyMessage(outcome.reason));
+          setStatus(spotifyMessage(outcome.reason, t));
           void recordEvent(supabase, userId, { id: eventId, alarmId: alarm.id, scheduledAt: scheduledAt.toISOString(), providerAttempted: true, providerSucceeded: false, providerFailureReason: outcome.reason });
         }
       } else if (source?.type === 'recording' && planIncludesRecording(alarm.audioPlan)) {
@@ -89,24 +200,24 @@ export function ClockMode({ userId, spotifyConnected }: { userId: string; spotif
         if (url) {
           try {
             await audio.crossfadeToRecording(url);
-            setStatus(`Your recording · ${source.title ?? 'My recording'}`);
+            setStatus(`${t.yourRecording} · ${source.title ?? t.myRecording}`);
             void recordEvent(supabase, userId, { id: eventId, alarmId: alarm.id, scheduledAt: scheduledAt.toISOString(), audioSourceUsed: 'recording' });
           } catch (error) {
             console.warn('recording playback failed', error);
-            setStatus('Your recording could not play. Fallback sound is ringing.');
+            setStatus(t.recordingFailed);
           }
         } else {
-          setStatus('Recording not found. Fallback sound is ringing.');
+          setStatus(t.recordingNotFound);
         }
       }
     },
-    [audio, spotify, supabase, userId],
+    [audio, spotify, supabase, userId, t],
   );
 
   useEffect(() => {
     void fetchAlarms(supabase, userId).then(setAlarms);
-    const t = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(t);
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
   }, [supabase, userId]);
 
   useEffect(() => {
@@ -118,11 +229,11 @@ export function ClockMode({ userId, spotifyConnected }: { userId: string; spotif
   useEffect(() => {
     const onVisibility = () => {
       if (!armedRef.current) return;
-      if (document.visibilityState === 'hidden') setWarning('This tab was hidden. Keep Wake in the foreground so the alarm can ring on time.');
+      if (document.visibilityState === 'hidden') setWarning(t.hiddenTabWarning);
     };
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
-  }, []);
+  }, [t]);
 
   useEffect(
     () => () => {
@@ -138,7 +249,7 @@ export function ClockMode({ userId, spotifyConnected }: { userId: string; spotif
   const arm = async () => {
     // A user gesture unlocks audio autoplay for later (required on iOS Safari).
     const unlocked = await audio.unlock();
-    if (!unlocked) setWarning("Your browser didn't allow sound yet. If the alarm is silent, tap the screen when it rings.");
+    if (!unlocked) setWarning(t.soundNotAllowedWarning);
     else setWarning('');
     if (spotifyConnected) void spotify.init();
     await clockRef.current?.start();
@@ -180,9 +291,9 @@ export function ClockMode({ userId, spotifyConnected }: { userId: string; spotif
         if (armedRef.current) void fireAlarm(r.alarm, r.scheduledAt, r.snoozeCount + 1, r.eventId);
       }, minutes * 60_000);
       void recordEvent(supabase, userId, { id: r.eventId, alarmId: r.alarm.id, scheduledAt: r.scheduledAt.toISOString(), snoozeCount: r.snoozeCount + 1 });
-      setStatus(`Snoozed until ${formatTime(at.getHours(), at.getMinutes())}`);
+      setStatus(t.snoozedUntil(formatTime(at.getHours(), at.getMinutes())));
     }
-  }, [audio, spotify, fireAlarm, supabase, userId]);
+  }, [audio, spotify, fireAlarm, supabase, userId, t]);
 
   const startHold = () => {
     if (holdTimer.current) return;
@@ -209,11 +320,11 @@ export function ClockMode({ userId, spotifyConnected }: { userId: string; spotif
     const source = primarySource(ringing.alarm.audioPlan);
     const snoozeMinutes = ringing.alarm.snooze.enabled ? ringing.alarm.snooze.durationMinutes : 0;
     return (
-      <div className="ringing" role="alertdialog" aria-label="Alarm ringing" onClick={() => void audio.unlock()}>
+      <div className="ringing" role="alertdialog" aria-label={t.alarmRinging} onClick={() => void audio.unlock()}>
         <div style={{ textAlign: 'center' }}>
           <div className="clock">{formatTime(now.getHours(), now.getMinutes())}</div>
           <div className="label">{ringing.alarm.name}</div>
-          <div className="status">{source ? describeSource(source, wakeSoundName) : ''}</div>
+          <div className="status">{source ? describeSource(source, (id) => wakeSoundName(id, locale), locale) : ''}</div>
           <div className="status">{status}</div>
         </div>
         <div className="controls">
@@ -225,12 +336,12 @@ export function ClockMode({ userId, spotifyConnected }: { userId: string; spotif
             onPointerLeave={endHold}
             onPointerCancel={endHold}
             onContextMenu={(e) => e.preventDefault()}
-            aria-label="Hold to stop the alarm"
+            aria-label={t.holdToStopAria}
           >
-            {holdProgress > 0 ? 'KEEP HOLDING…' : 'HOLD TO STOP'}
+            {holdProgress > 0 ? t.keepHolding : t.holdToStop}
           </button>
           {snoozeMinutes > 0 ? (
-            <button className="snooze-btn" onClick={snooze}>SNOOZE {snoozeMinutes} MIN</button>
+            <button className="snooze-btn" onClick={snooze}>{t.snoozeButton(snoozeMinutes)}</button>
           ) : null}
         </div>
       </div>
@@ -242,7 +353,7 @@ export function ClockMode({ userId, spotifyConnected }: { userId: string; spotif
       <div className="next-alarm">
         <div className="big">{formatTime(now.getHours(), now.getMinutes())}</div>
         <div className="sub">
-          {next ? <>Next alarm · {next.alarm.name} · {relativeDayLabel(next.at, now)} in {formatTimeUntil(next.at, now)}</> : 'No alarm scheduled'}
+          {next ? <>{t.nextAlarm} · {next.alarm.name} · {relativeDayLabel(next.at, now, locale)} {t.inWord} {formatTimeUntil(next.at, now)}</> : t.noAlarm}
         </div>
       </div>
 
@@ -251,15 +362,15 @@ export function ClockMode({ userId, spotifyConnected }: { userId: string; spotif
       <div className="section" style={{ padding: 20, textAlign: 'center' }}>
         {armed ? (
           <>
-            <span className="badge ready"><span className="dot" style={{ background: 'var(--success)' }} />Clock armed · keep this tab open</span>
-            <p className="sub" style={{ margin: '14px 0' }}>Wake will ring in this browser at the alarm time. The screen stays awake when your browser allows it.</p>
-            <button className="btn btn-ghost" onClick={disarm}>Disarm</button>
+            <span className="badge ready"><span className="dot" style={{ background: 'var(--success)' }} />{t.clockArmed}</span>
+            <p className="sub" style={{ margin: '14px 0' }}>{t.armedHint}</p>
+            <button className="btn btn-ghost" onClick={disarm}>{t.disarm}</button>
           </>
         ) : (
           <>
-            <p className="sub" style={{ margin: '4px 0 16px' }}>Turn this device into a nightstand clock. Tap once to allow sound, then keep the tab open.</p>
+            <p className="sub" style={{ margin: '4px 0 16px' }}>{t.armHint}</p>
             <button className="btn btn-primary btn-block" onClick={() => void arm()} disabled={enabledCount === 0}>
-              {enabledCount === 0 ? 'Enable an alarm first' : 'Arm clock mode'}
+              {enabledCount === 0 ? t.enableFirst : t.armClockMode}
             </button>
           </>
         )}
@@ -267,8 +378,7 @@ export function ClockMode({ userId, spotifyConnected }: { userId: string; spotif
 
       <div className="section" style={{ padding: 18 }}>
         <p className="sub" style={{ margin: 0, fontSize: 13 }}>
-          Browsers can&apos;t ring a closed tab, so Clock mode needs the tab open and the screen on. For a real locked-phone alarm, install the Wake mobile app.
-          Manage alarms in <Link href="/app">Alarms</Link>.
+          {t.footerBefore}<Link href="/app">{t.footerLink}</Link>{t.footerAfter}
         </p>
       </div>
 
@@ -283,7 +393,7 @@ export function ClockMode({ userId, spotifyConnected }: { userId: string; spotif
           }}
           disabled={alarms.length === 0}
         >
-          Test alarm now
+          {t.testAlarm}
         </button>
       </div>
     </main>
@@ -296,9 +406,9 @@ async function recordingUrl(supabase: ReturnType<typeof getSupabaseBrowserClient
   return signedUrl(supabase, (data as { storage_path: string }).storage_path);
 }
 
-function spotifyMessage(reason: string): string {
-  if (reason === 'no_active_device') return "Spotify couldn't start on this device. Your fallback alarm is playing.";
-  if (reason === 'premium_required') return 'Spotify playback needs Premium. Your fallback alarm is playing.';
-  if (reason === 'not_connected' || reason === 'token 404') return 'Spotify is not connected. Your fallback alarm is playing.';
-  return "Spotify couldn't start. Your fallback alarm is playing instead.";
+function spotifyMessage(reason: string, t: (typeof STR)[Locale]): string {
+  if (reason === 'no_active_device') return t.spotifyNoDevice;
+  if (reason === 'premium_required') return t.spotifyPremium;
+  if (reason === 'not_connected' || reason === 'token 404') return t.spotifyNotConnected;
+  return t.spotifyGeneric;
 }

@@ -30,12 +30,13 @@ export function planIncludesLocalSound(plan: AudioPlan): boolean {
 }
 
 /** Human label for list rows, e.g. "Spotify · Morning playlist". */
-export function describeSource(source: AudioSource, soundName?: (id: string) => string | undefined): string {
+export function describeSource(source: AudioSource, soundName?: (id: string) => string | undefined, locale: 'en' | 'es' = 'en'): string {
+  const mine = locale === 'es' ? 'Mi grabación' : 'My recording';
   switch (source.type) {
     case 'local':
       return soundName?.(source.soundId) ?? source.soundId;
     case 'recording':
-      return source.title ? `My recording · ${source.title}` : 'My recording';
+      return source.title ? `${mine} · ${source.title}` : mine;
     case 'music':
       return `${providerLabel(source.provider)} · ${source.title}`;
   }

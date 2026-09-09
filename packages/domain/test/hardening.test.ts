@@ -48,8 +48,8 @@ describe('fade robustness', () => {
 
   it('schedule uses exact multiples of the step (no float drift) and is monotonic', () => {
     const pts = fadeSchedule({ startVolume: 0, endVolume: 1, durationSeconds: 10, curve: 'logarithmic' }, 0.1);
-    expect(pts[3].atSeconds).toBeCloseTo(0.3, 12);
-    for (let i = 1; i < pts.length; i++) expect(pts[i].volume).toBeGreaterThanOrEqual(pts[i - 1].volume);
+    expect(pts[3]!.atSeconds).toBeCloseTo(0.3, 12);
+    for (let i = 1; i < pts.length; i++) expect(pts[i]!.volume).toBeGreaterThanOrEqual(pts[i - 1]!.volume);
     expect(pts[pts.length - 1]).toEqual({ atSeconds: 10, volume: 1 });
   });
 

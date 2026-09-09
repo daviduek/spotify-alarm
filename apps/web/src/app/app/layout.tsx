@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { AppTabs } from '../../components/AppTabs';
+import { TimezoneSync } from '../../components/TimezoneSync';
 import { isSupabaseConfigured } from '../../lib/env';
 import type { Locale } from '../../lib/i18n';
 import { getLocale } from '../../lib/i18n/server';
@@ -35,6 +36,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </button>
         </form>
       </nav>
+      <TimezoneSync userId={user.id} />
       {children}
     </div>
   );

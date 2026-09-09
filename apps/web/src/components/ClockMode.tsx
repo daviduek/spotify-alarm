@@ -28,6 +28,9 @@ import { getSupabaseBrowserClient } from '../lib/supabase/client';
 
 type Ringing = { alarm: Alarm; eventId: string; scheduledAt: Date; firedAt: number; snoozeCount: number };
 
+/** Last alarms this device saw — lets Clock mode ring even if the server is unreachable at load. */
+const ALARM_CACHE_KEY = 'wake_alarms_cache_v1';
+
 const STR: Record<Locale, {
   wakeSoundPlaying: string;
   tapToAllowSound: string;
@@ -62,6 +65,18 @@ const STR: Record<Locale, {
   spotifyPremium: string;
   spotifyNotConnected: string;
   spotifyGeneric: string;
+  offlineWarning: string;
+  checkTitle: string;
+  checkAlarm: (time: string) => string;
+  checkNoAlarm: string;
+  checkSoundOk: string;
+  checkSoundBlocked: string;
+  checkFallback: string;
+  checkSpotifyNotConnected: string;
+  checkSpotifyOk: string;
+  checkSpotifyFail: string;
+  checkRecordingOk: string;
+  checkRecordingMissing: string;
 }> = {
   en: {
     wakeSoundPlaying: 'Wake sound playing',
@@ -97,6 +112,18 @@ const STR: Record<Locale, {
     spotifyPremium: 'Spotify playback needs Premium. Your fallback alarm is playing.',
     spotifyNotConnected: 'Spotify is not connected. Your fallback alarm is playing.',
     spotifyGeneric: "Spotify couldn't start. Your fallback alarm is playing instead.",
+    offlineWarning: 'Could not reach the server — using the alarms saved on this device.',
+    checkTitle: 'Before-sleep check',
+    checkAlarm: (time) => `Next alarm set for ${time}`,
+    checkNoAlarm: 'No enabled alarm found',
+    checkSoundOk: 'Sound allowed by the browser',
+    checkSoundBlocked: 'Sound not unlocked — tap the screen once',
+    checkFallback: 'Fallback sound ready',
+    checkSpotifyNotConnected: 'Spotify not connected — the fallback will ring',
+    checkSpotifyOk: 'Spotify ready on this device',
+    checkSpotifyFail: 'Spotify could not start here — the fallback will ring',
+    checkRecordingOk: 'Your recording is available',
+    checkRecordingMissing: 'Recording not found — the fallback will ring',
   },
   es: {
     wakeSoundPlaying: 'Sonido de Wake sonando',
@@ -132,6 +159,18 @@ const STR: Record<Locale, {
     spotifyPremium: 'La reproducción de Spotify necesita Premium. Tu alarma de respaldo está sonando.',
     spotifyNotConnected: 'Spotify no está conectado. Tu alarma de respaldo está sonando.',
     spotifyGeneric: 'Spotify no pudo iniciarse. Tu alarma de respaldo está sonando en su lugar.',
+    offlineWarning: 'No se pudo conectar al servidor — usando las alarmas guardadas en este dispositivo.',
+    checkTitle: 'Chequeo antes de dormir',
+    checkAlarm: (time) => `Próxima alarma a las ${time}`,
+    checkNoAlarm: 'No hay ninguna alarma activada',
+    checkSoundOk: 'Sonido permitido por el navegador',
+    checkSoundBlocked: 'Sonido no desbloqueado — toca la pantalla una vez',
+    checkFallback: 'Sonido de respaldo listo',
+    checkSpotifyNotConnected: 'Spotify no está conectado — sonará el respaldo',
+    checkSpotifyOk: 'Spotify listo en este dispositivo',
+    checkSpotifyFail: 'Spotify no pudo iniciarse aquí — sonará el respaldo',
+    checkRecordingOk: 'Tu grabación está disponible',
+    checkRecordingMissing: 'No se encontró la grabación — sonará el respaldo',
   },
 };
 
@@ -150,12 +189,15 @@ export function ClockMode({ userId, spotifyConnected }: { userId: string; spotif
   const [status, setStatus] = useState('');
   const [warning, setWarning] = useState('');
   const [holdProgress, setHoldProgress] = useState(0);
+  const [checks, setChecks] = useState<{ ok: boolean; label: string }[] | null>(null);
   const clockRef = useRef<AlarmClock | null>(null);
   const armedRef = useRef(false);
   const holdTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const snoozeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ringingRef = useRef<Ringing | null>(null);
   ringingRef.current = ringing;
+  const tRef = useRef(t);
+  tRef.current = t;
 
   const fireAlarm = useCallback(
     async (alarm: Alarm, scheduledAt: Date, snoozeCount = 0, eventId = crypto.randomUUID()) => {
@@ -215,7 +257,27 @@ export function ClockMode({ userId, spotifyConnected }: { userId: string; spotif
   );
 
   useEffect(() => {
-    void fetchAlarms(supabase, userId).then(setAlarms);
+    fetchAlarms(supabase, userId)
+      .then((list) => {
+        setAlarms(list);
+        try {
+          localStorage.setItem(ALARM_CACHE_KEY, JSON.stringify(list));
+        } catch {
+          /* storage unavailable */
+        }
+      })
+      .catch(() => {
+        // Offline / server error: fall back to the last alarms this device saw (local-first).
+        try {
+          const raw = localStorage.getItem(ALARM_CACHE_KEY);
+          if (raw) {
+            setAlarms(JSON.parse(raw) as Alarm[]);
+            setWarning(tRef.current.offlineWarning);
+          }
+        } catch {
+          /* ignore */
+        }
+      });
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, [supabase, userId]);
@@ -251,10 +313,34 @@ export function ClockMode({ userId, spotifyConnected }: { userId: string; spotif
     const unlocked = await audio.unlock();
     if (!unlocked) setWarning(t.soundNotAllowedWarning);
     else setWarning('');
-    if (spotifyConnected) void spotify.init();
     await clockRef.current?.start();
     armedRef.current = true;
     setArmed(true);
+
+    // Before-sleep check (spec §28/§29): verify tonight's plan while the user is still awake.
+    const target = clockRef.current?.nextAcross() ?? null;
+    const list: { ok: boolean; label: string }[] = [
+      target ? { ok: true, label: t.checkAlarm(formatTime(target.at.getHours(), target.at.getMinutes())) } : { ok: false, label: t.checkNoAlarm },
+      unlocked ? { ok: true, label: t.checkSoundOk } : { ok: false, label: t.checkSoundBlocked },
+      { ok: true, label: t.checkFallback },
+    ];
+    if (target && planIncludesProvider(target.alarm.audioPlan, 'spotify')) {
+      if (!spotifyConnected) list.push({ ok: false, label: t.checkSpotifyNotConnected });
+      else {
+        const ok = await spotify.init();
+        list.push(ok ? { ok: true, label: t.checkSpotifyOk } : { ok: false, label: t.checkSpotifyFail });
+      }
+    } else if (spotifyConnected) {
+      void spotify.init();
+    }
+    if (target) {
+      const src = primarySource(target.alarm.audioPlan);
+      if (src?.type === 'recording' && src.recordingId) {
+        const url = await recordingUrl(supabase, src.recordingId);
+        list.push(url ? { ok: true, label: t.checkRecordingOk } : { ok: false, label: t.checkRecordingMissing });
+      }
+    }
+    setChecks(list);
   };
 
   const disarm = () => {
@@ -264,6 +350,7 @@ export function ClockMode({ userId, spotifyConnected }: { userId: string; spotif
     armedRef.current = false;
     setArmed(false);
     setWarning('');
+    setChecks(null);
   };
 
   const stop = useCallback(() => {
@@ -364,6 +451,16 @@ export function ClockMode({ userId, spotifyConnected }: { userId: string; spotif
           <>
             <span className="badge ready"><span className="dot" style={{ background: 'var(--success)' }} />{t.clockArmed}</span>
             <p className="sub" style={{ margin: '14px 0' }}>{t.armedHint}</p>
+            {checks ? (
+              <div className="sleep-check" role="list" aria-label={t.checkTitle}>
+                <span className="sleep-check-title">{t.checkTitle}</span>
+                {checks.map((c) => (
+                  <div role="listitem" key={c.label}>
+                    <span className={c.ok ? 'ok' : 'warn'} aria-hidden="true">{c.ok ? '✓' : '⚠'}</span> <span>{c.label}</span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
             <button className="btn btn-ghost" onClick={disarm}>{t.disarm}</button>
           </>
         ) : (

@@ -37,6 +37,10 @@ const STR: Record<Locale, {
   tipBefore: string;
   tipLink: string;
   tipAfter: string;
+  onboardTitle: string;
+  onboard1: string;
+  onboard2: string;
+  onboard3: string;
 }> = {
   en: {
     loadError: 'Could not load alarms',
@@ -55,6 +59,10 @@ const STR: Record<Locale, {
     tipBefore: 'Open ',
     tipLink: 'Clock mode',
     tipAfter: ' and keep the tab open for the alarm to ring in this browser. For a locked phone, use the mobile app.',
+    onboardTitle: 'Welcome to Wake 👋',
+    onboard1: 'Create an alarm: time, days and how gently it should wake you.',
+    onboard2: 'Pick what you hear: a Wake sound, your own voice, or Spotify.',
+    onboard3: 'At night, open Clock mode and keep the tab open — it always rings.',
   },
   es: {
     loadError: 'No se pudieron cargar las alarmas',
@@ -73,6 +81,10 @@ const STR: Record<Locale, {
     tipBefore: 'Abre el ',
     tipLink: 'modo Reloj',
     tipAfter: ' y deja la pestaña abierta para que la alarma suene en este navegador. Para un teléfono bloqueado, usa la app móvil.',
+    onboardTitle: 'Bienvenido a Wake 👋',
+    onboard1: 'Crea una alarma: hora, días y qué tan suave te despierta.',
+    onboard2: 'Elige qué escuchar: un sonido Wake, tu propia voz o Spotify.',
+    onboard3: 'A la noche, abre el modo Reloj y deja la pestaña abierta — siempre suena.',
   },
 };
 
@@ -145,9 +157,14 @@ export function AlarmsDashboard({ userId }: { userId: string }) {
       {alarms === null ? (
         <p className="sub" style={{ marginTop: 24 }}>{t.loading}</p>
       ) : alarms.length === 0 ? (
-        <div className="section" style={{ marginTop: 20, padding: 28, textAlign: 'center' }}>
-          <p style={{ margin: '0 0 12px' }}>{t.noAlarmsYet}</p>
-          <Link href="/app/alarms/new" className="btn btn-primary">{t.createFirst}</Link>
+        <div className="section" style={{ marginTop: 20, padding: '24px 20px' }}>
+          <p style={{ margin: '0 0 14px', color: 'var(--text)', fontWeight: 600 }}>{t.onboardTitle}</p>
+          <ol className="onboard-steps">
+            <li>{t.onboard1}</li>
+            <li>{t.onboard2}</li>
+            <li>{t.onboard3}</li>
+          </ol>
+          <Link href="/app/alarms/new" className="btn btn-primary btn-block" style={{ marginTop: 18 }}>{t.createFirst}</Link>
         </div>
       ) : (
         <div className="alarm-list">

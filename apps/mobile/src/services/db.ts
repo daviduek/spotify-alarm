@@ -75,6 +75,19 @@ const MIGRATIONS: string[] = [
   );
   CREATE INDEX IF NOT EXISTS idx_history_alarm ON alarm_history(alarm_id);
   `,
+  // v2 — cloud sync (optional account). Cache of the user's cloud `recordings` rows so an
+  // alarm can reference a cloud recording and download it on demand (see SYNC.md).
+  `
+  CREATE TABLE IF NOT EXISTS cloud_recordings (
+    id TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    storage_path TEXT NOT NULL,
+    mime_type TEXT NOT NULL,
+    duration_ms INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    local_uri TEXT
+  );
+  `,
 ];
 
 async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {

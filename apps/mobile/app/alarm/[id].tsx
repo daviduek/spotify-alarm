@@ -19,6 +19,7 @@ import { getAlarm } from '../../src/services/alarms/alarmRepository';
 import { alarmAudioEngine } from '../../src/services/audio/alarmAudioEngine';
 import { flags } from '../../src/services/config';
 import { recordAlarmEvent } from '../../src/services/history';
+import { getLocale, type Locale } from '../../src/services/i18n';
 import { logger } from '../../src/services/logger';
 import { spotifyProvider } from '../../src/services/spotify/spotifyProvider';
 import { useRuntimeStore } from '../../src/state/runtimeStore';
@@ -26,6 +27,50 @@ import { formatClock, withTimeout } from '../../src/utils/async';
 import { colors, radius, spacing, type } from '../../src/theme';
 
 const SPOTIFY_TIMEOUT_MS = 25_000;
+
+const STR: Record<Locale, {
+  fallbackPlaying: string; startingSpotify: string; yourRecording: string; myRecording: string; recordingFailed: string;
+  alarm: string; currentTime: string; stopA11y: string; stopHint: string;
+  snoozeForA11y: string; minutes: string; snoozeDisabledA11y: string;
+  keepHolding: string; holdToStop: string; snoozePrefix: string; snoozeOff: string;
+}> = {
+  en: {
+    fallbackPlaying: 'Fallback sound playing',
+    startingSpotify: 'Fallback sound playing · starting Spotify…',
+    yourRecording: 'Your recording',
+    myRecording: 'My recording',
+    recordingFailed: 'Your recording could not play. Your fallback alarm is playing instead.',
+    alarm: 'Alarm',
+    currentTime: 'Current time',
+    stopA11y: 'Stop alarm. Press and hold for one second.',
+    stopHint: 'Stops the alarm',
+    snoozeForA11y: 'Snooze for',
+    minutes: 'minutes',
+    snoozeDisabledA11y: 'Snooze disabled',
+    keepHolding: 'KEEP HOLDING…',
+    holdToStop: 'HOLD TO STOP',
+    snoozePrefix: 'SNOOZE',
+    snoozeOff: 'SNOOZE OFF',
+  },
+  es: {
+    fallbackPlaying: 'Sonando el sonido de respaldo',
+    startingSpotify: 'Sonido de respaldo sonando · iniciando Spotify…',
+    yourRecording: 'Tu grabación',
+    myRecording: 'Mi grabación',
+    recordingFailed: 'Tu grabación no se pudo reproducir. Está sonando tu alarma de respaldo.',
+    alarm: 'Alarma',
+    currentTime: 'Hora actual',
+    stopA11y: 'Detener alarma. Mantén presionado un segundo.',
+    stopHint: 'Detiene la alarma',
+    snoozeForA11y: 'Snooze de',
+    minutes: 'minutos',
+    snoozeDisabledA11y: 'Snooze desactivado',
+    keepHolding: 'SIGUE PRESIONANDO…',
+    holdToStop: 'MANTÉN PARA DETENER',
+    snoozePrefix: 'SNOOZE',
+    snoozeOff: 'SNOOZE APAGADO',
+  },
+};
 
 /**
  * JS alarm screen (spec §24, §35, §36). Reached via wake://alarm/<id> or the native event.
@@ -35,12 +80,14 @@ const SPOTIFY_TIMEOUT_MS = 25_000;
 export default function AlarmScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const locale = getLocale();
+  const str = STR[locale];
   const activeAlarm = useRuntimeStore((s) => s.activeAlarm);
   const setActiveAlarm = useRuntimeStore((s) => s.setActiveAlarm);
 
   const [alarm, setAlarm] = useState<Alarm | null>(null);
   const [now, setNow] = useState(new Date());
-  const [status, setStatus] = useState('Fallback sound playing');
+  const [status, setStatus] = useState(str.fallbackPlaying);
   const [holding, setHolding] = useState(false);
   const [done, setDone] = useState(false);
   const spotifyStarted = useRef(false);
@@ -101,7 +148,7 @@ export default function AlarmScreen() {
       if (!source) return;
 
       if (source.type === 'music' && planIncludesProvider(a.audioPlan, 'spotify') && flags.spotify_enabled) {
-        setStatus('Fallback sound playing · starting Spotify…');
+        setStatus(str.startingSpotify);
         let result;
         try {
           result = await withTimeout(spotifyProvider.play(source.uri), SPOTIFY_TIMEOUT_MS, 'Spotify');
@@ -123,19 +170,19 @@ export default function AlarmScreen() {
       if (source.type === 'recording' && planIncludesRecording(a.audioPlan) && flags.recordings_enabled) {
         if (Platform.OS === 'android') {
           // AlarmService already plays the recording file natively (soundUri).
-          setStatus(`Your recording · ${source.title ?? 'My recording'}`);
+          setStatus(`${str.yourRecording} · ${source.title ?? str.myRecording}`);
           writeHistory({ audioSourceUsed: 'recording' });
           return;
         }
         if (!source.fileUri) return;
         try {
           await alarmAudioEngine.crossfadeToRecording(source.fileUri);
-          setStatus(`Your recording · ${source.title ?? 'My recording'}`);
+          setStatus(`${str.yourRecording} · ${source.title ?? str.myRecording}`);
           writeHistory({ audioSourceUsed: 'recording' });
           await handOffFromFallback(a.id);
         } catch (error) {
           logger.warn('recording_playback_failed', { message: String(error) });
-          setStatus('Your recording could not play. Your fallback alarm is playing instead.');
+          setStatus(str.recordingFailed);
         }
       }
     },
@@ -183,11 +230,11 @@ export default function AlarmScreen() {
   return (
     <SafeAreaView style={styles.root}>
       <View style={styles.top}>
-        <Text style={styles.time} accessibilityLabel={`Current time ${formatClock(now)}`}>
+        <Text style={styles.time} accessibilityLabel={`${str.currentTime} ${formatClock(now)}`}>
           {formatClock(now)}
         </Text>
-        <Text style={styles.name}>{alarm?.name ?? 'Alarm'}</Text>
-        <Text style={styles.source}>{source ? describeSource(source, wakeSoundName) : ''}</Text>
+        <Text style={styles.name}>{alarm?.name ?? str.alarm}</Text>
+        <Text style={styles.source}>{source ? describeSource(source, (soundId) => wakeSoundName(soundId, locale), locale) : ''}</Text>
         <Text style={styles.status}>{status}</Text>
       </View>
 
@@ -198,20 +245,20 @@ export default function AlarmScreen() {
           onLongPress={stop}
           delayLongPress={1000}
           accessibilityRole="button"
-          accessibilityLabel="Stop alarm. Press and hold for one second."
-          accessibilityHint="Stops the alarm"
+          accessibilityLabel={str.stopA11y}
+          accessibilityHint={str.stopHint}
           style={({ pressed }) => [styles.stop, pressed && styles.stopPressed]}
         >
-          <Text style={styles.stopText}>{holding ? 'KEEP HOLDING…' : 'HOLD TO STOP'}</Text>
+          <Text style={styles.stopText}>{holding ? str.keepHolding : str.holdToStop}</Text>
         </Pressable>
         <Pressable
           onPress={snooze}
           disabled={snoozeMinutes <= 0}
           accessibilityRole="button"
-          accessibilityLabel={snoozeMinutes > 0 ? `Snooze for ${snoozeMinutes} minutes` : 'Snooze disabled'}
+          accessibilityLabel={snoozeMinutes > 0 ? `${str.snoozeForA11y} ${snoozeMinutes} ${str.minutes}` : str.snoozeDisabledA11y}
           style={({ pressed }) => [styles.snooze, snoozeMinutes <= 0 && styles.disabled, pressed && styles.stopPressed]}
         >
-          <Text style={styles.snoozeText}>{snoozeMinutes > 0 ? `SNOOZE ${snoozeMinutes} MIN` : 'SNOOZE OFF'}</Text>
+          <Text style={styles.snoozeText}>{snoozeMinutes > 0 ? `${str.snoozePrefix} ${snoozeMinutes} MIN` : str.snoozeOff}</Text>
         </Pressable>
       </View>
     </SafeAreaView>

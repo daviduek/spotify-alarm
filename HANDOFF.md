@@ -21,12 +21,7 @@ Producto: despertador confiable con fuentes de audio inteligentes (Spotify, tu v
 
 1. ~~Auth URL Configuration~~ **HECHO (2026-09-09, vía Cowork)**: Site URL y Redirect URLs configuradas; "Confirm email" desactivado para pruebas — **reactivarlo antes de abrir la app a usuarios reales**. (Recomendado pendiente: Email Templates con {{ .TokenHash }} para links que funcionen en otro dispositivo.)
 2. ~~Aplicar `supabase/migrations/0002_hardening.sql`~~ **HECHO (2026-09-09)**: aplicada al proyecto wake, 0 advisories de seguridad.
-3. **Spotify (opcional):**
-   - Supabase → Project Settings → API keys → copiá la **service_role** (o creá una secret key `sb_secret_…`)
-     → Vercel env `SUPABASE_SERVICE_ROLE_KEY` (solo server; nunca `NEXT_PUBLIC_`).
-   - <https://developer.spotify.com/dashboard> → Create app → Redirect URI exacta
-     `https://alarma.dondavid.xyz/api/spotify/callback` → APIs: Web API + Web Playback SDK → Client ID → Vercel
-     env `SPOTIFY_CLIENT_ID` → redeploy. User Management: agregá tus emails. Reproducción requiere Premium.
+3. ~~Spotify~~ **HECHO (2026-09-09)**: app "Wake" en el Spotify Dashboard con ambas redirect URIs, SPOTIFY_CLIENT_ID + SUPABASE_SERVICE_ROLE_KEY en Vercel, OAuth probado de punta a punta (Conectado · premium). Nota: la app está en Development mode — solo los emails agregados en User Management pueden conectar; para abrirla a terceros, pedir quota extension en el dashboard de Spotify.
 4. **Móvil:** el primer build de Android TERMINÓ OK (2026-09-09). APK: https://expo.dev/artifacts/eas/HQ98suuWs5txy_Wpm-hw0bl9Gl_hExgHNZvmBgPVC4Q.apk (o desde https://expo.dev/accounts/daviduek/projects/spotify-alarm/builds). Instalalo en un Android 13+ y validá docs/TECHNICAL_VALIDATION.md filas A1–A6. iOS sigue en §5 (requiere Apple Developer + iPhone iOS 26+).
 
 ## 3. Qué cambió (auditoría + mejoras + i18n)
@@ -97,7 +92,7 @@ pantalla completa. La alarma con teléfono bloqueado es la app nativa (§5). La 
 
 ## 7. Pendientes sugeridos
 
-- [ ] Vos: Spotify (§2.3). Auth URLs y migración 0002: hechas. Reactivar "Confirm email" antes de usuarios reales.
+- [ ] Vos: reactivar "Confirm email" en Supabase antes de usuarios reales; quota extension de Spotify si la abrís a terceros.
 - [ ] Vos: instalar el APK de Android (build ya lanzado) y validar docs/TECHNICAL_VALIDATION.md; luego iOS.
 - [ ] Dominio propio (ej. `wake.eluter.com`) → actualizar `NEXT_PUBLIC_APP_URL` y redirect URIs.
 - [ ] Reconciliación offline completa (hoy: cache localStorage de alarmas en Clock mode). CSP report-only y time zone: hechos.

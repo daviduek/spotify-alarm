@@ -24,8 +24,7 @@ Producto: despertador confiable con fuentes de audio inteligentes (Spotify, tu v
    - (Recomendado) Email Templates: usar links con `{{ .TokenHash }}`
      (`{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email|recovery|magiclink`) para que el link
      funcione aunque lo abras en otro dispositivo. El callback ya soporta ambos formatos.
-2. **Aplicar `supabase/migrations/0002_hardening.sql`** (SQL Editor → pegar → Run). Oculta los tokens de Spotify
-   al browser, endurece policies y agrega checks. No se pudo aplicar desde acá (el conector bloqueó el DDL).
+2. ~~Aplicar `supabase/migrations/0002_hardening.sql`~~ **HECHO (2026-09-09)**: aplicada al proyecto wake, 0 advisories de seguridad.
 3. **Spotify (opcional):**
    - Supabase → Project Settings → API keys → copiá la **service_role** (o creá una secret key `sb_secret_…`)
      → Vercel env `SUPABASE_SERVICE_ROLE_KEY` (solo server; nunca `NEXT_PUBLIC_`).
@@ -102,7 +101,7 @@ pantalla completa. La alarma con teléfono bloqueado es la app nativa (§5). La 
 
 ## 7. Pendientes sugeridos
 
-- [ ] Vos: Auth URLs (§2.1), migración 0002 (§2.2), Spotify (§2.3).
+- [ ] Vos: Auth URLs (§2.1) y Spotify (§2.3). La migración 0002 ya está aplicada.
 - [ ] Vos: primer `eas build` Android; luego iOS.
 - [ ] Dominio propio (ej. `wake.eluter.com`) → actualizar `NEXT_PUBLIC_APP_URL` y redirect URIs.
 - [ ] CSP en modo report-only; persistir time zone en `profiles`; reconciliación offline (IndexedDB).
